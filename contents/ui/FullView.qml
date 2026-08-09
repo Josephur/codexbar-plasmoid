@@ -120,18 +120,17 @@ Item {
                         onClicked: tabList.scrollByPage(-1)
                     }
 
-                    ListView {
+                    Flickable {
                         id: tabList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        model: fullRoot.tabs
-                        orientation: ListView.Horizontal
-                        spacing: 0
+                        contentWidth: tabRow.implicitWidth
+                        contentHeight: height
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
                         flickableDirection: Flickable.AutoFlickIfNeeded
-                        snapMode: ListView.SnapToItem
-                        currentIndex: Math.max(0, fullRoot.tabs.indexOf(fullRoot.currentTab))
+                        readonly property int currentIndex:
+                            Math.max(0, fullRoot.tabs.indexOf(fullRoot.currentTab))
 
                         function scrollByPage(direction) {
                             var limit = Math.max(0, contentWidth - width)
@@ -167,18 +166,26 @@ Item {
                             target: tabList
                         }
 
-                        delegate: Item {
-                            id: tab
-                            required property string modelData
-                            readonly property string tabId: modelData
-                            readonly property bool isOverview: tabId === "overview"
-                            readonly property bool selected: fullRoot.currentTab === tabId
-                            readonly property var meta: Catalog.meta(tabId)
-                            readonly property real remaining:
-                                isOverview ? -1 : fullRoot.plasmoidRoot.remainingPercent(tabId, "session")
+                        Row {
+                            id: tabRow
+                            height: parent.height
+                            spacing: 0
 
-                            width: fullRoot.naturalTabWidth(tabId)
-                            height: tabList.height
+                            Repeater {
+                                model: fullRoot.tabs
+
+                                delegate: Item {
+                                    id: tab
+                                    required property string modelData
+                                    readonly property string tabId: modelData
+                                    readonly property bool isOverview: tabId === "overview"
+                                    readonly property bool selected: fullRoot.currentTab === tabId
+                                    readonly property var meta: Catalog.meta(tabId)
+                                    readonly property real remaining:
+                                        isOverview ? -1 : fullRoot.plasmoidRoot.remainingPercent(tabId, "session")
+
+                                    width: fullRoot.naturalTabWidth(tabId)
+                                    height: tabList.height
 
                             Rectangle {
                                 id: plate
@@ -266,6 +273,8 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: fullRoot.plasmoidRoot.currentTab = tab.tabId
+                            }
+                                }
                             }
                         }
                     }
