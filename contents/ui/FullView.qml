@@ -89,12 +89,15 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
 
         PlasmaComponents3.ScrollBar.vertical: PlasmaComponents3.ScrollBar {
+            id: verticalScrollBar
             visible: flick.contentHeight > flick.height
         }
 
         ColumnLayout {
             id: mainColumn
-            width: flick.width
+            width: flick.width - (verticalScrollBar.visible
+                                  ? verticalScrollBar.width + Kirigami.Units.smallSpacing
+                                  : 0)
             spacing: Kirigami.Units.smallSpacing
 
             // ---- provider switcher ----
