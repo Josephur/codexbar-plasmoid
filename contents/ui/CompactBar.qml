@@ -58,6 +58,14 @@ MouseArea {
         return min
     }
 
+    function dollarAmountFor(pid) {
+        if (pid === "__merged__")
+            return ""
+        var data = plasmoidRoot.usageData[pid]
+        var usage = data && data.entry ? data.entry.usage : null
+        return usage ? Catalog.dollarAmountText(usage.spend) : ""
+    }
+
     function staleFor(pid) {
         if (pid !== "__merged__")
             return plasmoidRoot.isStale(pid)
@@ -157,6 +165,11 @@ MouseArea {
                     Layout.alignment: Qt.AlignVCenter
                     font.pixelSize: Math.max(9, Math.round(compactRoot.iconSide * 0.62))
                     text: {
+                        if (Plasmoid.configuration.panelValueMode === "dollars") {
+                            var amount = compactRoot.dollarAmountFor(providerItem.providerId)
+                            if (amount !== "")
+                                return amount
+                        }
                         var v = compactRoot.remainingFor(
                                     providerItem.providerId, Plasmoid.configuration.panelPercentSource)
                         if (v < 0)

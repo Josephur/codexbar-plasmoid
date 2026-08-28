@@ -109,6 +109,17 @@ function money(v) {
     return "$ " + v.toFixed(2)
 }
 
+// Panel dollar labels are deliberately strict: usage windows normally carry
+// only a percentage, so a dollar amount is valid only when the provider
+// explicitly supplies a finite USD spend value.
+function dollarAmountText(spend) {
+    if (!spend || typeof spend.used !== "number" || !isFinite(spend.used)
+            || typeof spend.currency !== "string"
+            || spend.currency.trim().toUpperCase() !== "USD")
+        return ""
+    return money(spend.used)
+}
+
 // "Resets in 3h 53m" / "Resets in 3d 20h" — like the original menu rows.
 // Falls back to the CLI's resetDescription when no exact timestamp exists.
 function resetText(win, nowMs) {

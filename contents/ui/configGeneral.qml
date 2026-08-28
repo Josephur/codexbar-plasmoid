@@ -9,6 +9,7 @@ KCM.SimpleKCM {
 
     property alias cfg_refreshIntervalMinutes: refreshSpin.value
     property alias cfg_showPercentInPanel: showPercent.checked
+    property string cfg_panelValueMode
     property alias cfg_separateIcons: separateIcons.checked
     property string cfg_panelDisplayMode
     property alias cfg_hideCritters: hideCritters.checked
@@ -22,10 +23,12 @@ KCM.SimpleKCM {
 
     readonly property var sourceValues: ["session", "weekly", "lowest"]
     readonly property var styleValues: ["remaining", "used"]
+    readonly property var valueModeValues: ["percentage", "dollars"]
     readonly property var displayModeValues: ["meters", "logos", "logos-and-meters"]
 
     onCfg_panelPercentSourceChanged: sourceCombo.sync()
     onCfg_percentStyleChanged: styleCombo.sync()
+    onCfg_panelValueModeChanged: valueModeCombo.sync()
     onCfg_panelDisplayModeChanged: displayModeCombo.sync()
 
     Kirigami.FormLayout {
@@ -75,7 +78,19 @@ KCM.SimpleKCM {
 
         QQC2.CheckBox {
             id: showPercent
-            text: i18n("Show percentage next to the icon")
+            text: i18n("Show value next to the icon")
+        }
+
+        QQC2.ComboBox {
+            id: valueModeCombo
+            Kirigami.FormData.label: i18n("Panel value:")
+            enabled: showPercent.checked
+            model: [i18n("Percentage"), i18n("Dollar amount when reported")]
+            function sync() {
+                currentIndex = Math.max(0, page.valueModeValues.indexOf(page.cfg_panelValueMode))
+            }
+            Component.onCompleted: sync()
+            onActivated: page.cfg_panelValueMode = page.valueModeValues[currentIndex]
         }
 
         Item { Kirigami.FormData.isSection: true }
@@ -83,7 +98,7 @@ KCM.SimpleKCM {
         QQC2.ComboBox {
             id: sourceCombo
             Kirigami.FormData.label: i18n("Percentage window:")
-            enabled: showPercent.checked
+            enabled: showPercent.checked && valueModeCombo.currentIndex === 0
             model: [i18n("Session (5-hour)"), i18n("Weekly"), i18n("Lowest remaining")]
             function sync() {
                 currentIndex = Math.max(0, page.sourceValues.indexOf(page.cfg_panelPercentSource))
@@ -95,7 +110,7 @@ KCM.SimpleKCM {
         QQC2.ComboBox {
             id: styleCombo
             Kirigami.FormData.label: i18n("Percentage shows:")
-            enabled: showPercent.checked
+            enabled: showPercent.checked && valueModeCombo.currentIndex === 0
             model: [i18n("Remaining"), i18n("Used")]
             function sync() {
                 currentIndex = Math.max(0, page.styleValues.indexOf(page.cfg_percentStyle))
