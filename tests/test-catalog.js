@@ -13,12 +13,26 @@ const catalog = {}
 vm.createContext(catalog)
 vm.runInContext(source, catalog, { filename: "catalog.js" })
 
-// A panel dollar label must only be shown for a payload that explicitly
-// declares a finite USD amount. Changing the eligibility check must fail here.
-assert.equal(catalog.dollarAmountText({ used: 12.5, currency: "USD" }), "$ 12.50")
-assert.equal(catalog.dollarAmountText({ used: 12.5, currency: "EUR" }), "")
-assert.equal(catalog.dollarAmountText({ used: "12.5", currency: "USD" }), "")
-assert.equal(catalog.dollarAmountText({ used: 12.5 }), "")
-assert.equal(catalog.dollarAmountText(null), "")
+// A dollar panel label represents remaining credit, never a used amount or a
+// subscription quota. These fixtures mirror the live OpenRouter and DeepSeek
+// payload shapes captured on this machine.
+assert.equal(catalog.remainingDollarAmountText({
+    details: [{
+        title: "Credits",
+        rows: [
+            { label: "Remaining", value: "$11.52" },
+            { label: "Used", value: "$18.48" }
+        ]
+    }]
+}), "$ 11.52")
+assert.equal(catalog.remainingDollarAmountText({
+    primary: { usedPercent: 0, resetDescription: "$8.93 (Paid: $8.93 / Granted: $0.00)" }
+}), "$ 8.93")
+assert.equal(catalog.remainingDollarAmountText({
+    details: [{ title: "Credits", rows: [{ label: "Used", value: "$18.48" }] }]
+}), "")
+assert.equal(catalog.remainingDollarAmountText({
+    primary: { usedPercent: 0, resetDescription: "Resets in 3 hours" }
+}), "")
 
 console.log("Catalog tests passed")

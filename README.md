@@ -13,7 +13,7 @@ a faithful re-creation of [CodexBar](https://github.com/steipete/CodexBar)
   one merged icon showing the worst case across all enabled providers;
   optionally one icon per provider, with the original "critter" faces for
   Codex (eyes) and Claude (asterisk). Optional panel label: percentage, or a
-  dollar amount when a provider explicitly reports a USD spend value.
+  remaining dollar balance when a provider explicitly reports one.
 - **Popup like the original menu:** provider switcher tabs with brand-colored
   quota bars, an overview page, and per provider: session / weekly / extra
   rate windows ("Codex Spark", model-scoped weekly caps, …) with progress
@@ -28,7 +28,7 @@ a faithful re-creation of [CodexBar](https://github.com/steipete/CodexBar)
   schema-v1 `claude-swap` adapter.
 - **Settings:** refresh interval, any of the 58 providers the CLI supports,
   panel label (percentage by session/weekly/lowest and remaining/used, or a
-  reported dollar amount), plain bars,
+  reported remaining dollar balance), plain bars,
   cost/status toggles, custom CLI path, Claude account adapter.
 
 ## Requirements

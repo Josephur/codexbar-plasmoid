@@ -63,7 +63,7 @@ MouseArea {
             return ""
         var data = plasmoidRoot.usageData[pid]
         var usage = data && data.entry ? data.entry.usage : null
-        return usage ? Catalog.dollarAmountText(usage.spend) : ""
+        return usage ? Catalog.remainingDollarAmountText(usage) : ""
     }
 
     function staleFor(pid) {

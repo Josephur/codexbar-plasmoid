@@ -109,15 +109,48 @@ function money(v) {
     return "$ " + v.toFixed(2)
 }
 
-// Panel dollar labels are deliberately strict: usage windows normally carry
-// only a percentage, so a dollar amount is valid only when the provider
-// explicitly supplies a finite USD spend value.
-function dollarAmountText(spend) {
-    if (!spend || typeof spend.used !== "number" || !isFinite(spend.used)
-            || typeof spend.currency !== "string"
-            || spend.currency.trim().toUpperCase() !== "USD")
+function dollarText(value, leadingOnly) {
+    if (typeof value !== "string")
         return ""
-    return money(spend.used)
+    var match = leadingOnly
+        ? value.match(/^\s*\$\s*(\d+(?:\.\d{1,2})?)(?:\b|\s|\()/)
+        : value.match(/^\s*\$\s*(\d+(?:\.\d{1,2})?)\s*$/)
+    if (!match)
+        return ""
+    var amount = Number(match[1])
+    return isFinite(amount) ? money(amount) : ""
+}
+
+// API-credit providers sometimes report a remaining dollar balance instead of
+// a subscription percentage. Extract only values with explicit remaining
+// semantics; do not reinterpret usage, cost, or generic reset descriptions.
+function remainingDollarAmountText(usage) {
+    if (!usage)
+        return ""
+    if (Array.isArray(usage.details)) {
+        for (var i = 0; i < usage.details.length; i++) {
+            var rows = usage.details[i] && usage.details[i].rows
+            if (!Array.isArray(rows))
+                continue
+            for (var j = 0; j < rows.length; j++) {
+                var row = rows[j]
+                if (row && typeof row.label === "string"
+                        && row.label.trim().toLowerCase() === "remaining") {
+                    var detailedAmount = dollarText(row.value, false)
+                    if (detailedAmount !== "")
+                        return detailedAmount
+                }
+            }
+        }
+    }
+    var slots = ["primary", "secondary", "tertiary"]
+    for (var k = 0; k < slots.length; k++) {
+        var window = usage[slots[k]]
+        var describedAmount = window ? dollarText(window.resetDescription, true) : ""
+        if (describedAmount !== "")
+            return describedAmount
+    }
+    return ""
 }
 
 // "Resets in 3h 53m" / "Resets in 3d 20h" — like the original menu rows.
