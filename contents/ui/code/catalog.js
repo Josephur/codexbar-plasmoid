@@ -106,7 +106,7 @@ function compactTokens(n) {
 
 function money(v) {
     if (v === undefined || v === null) return ""
-    return "$ " + v.toFixed(2)
+    return "$" + v.toFixed(2)
 }
 
 function dollarText(value, leadingOnly) {

@@ -24,10 +24,10 @@ assert.equal(catalog.remainingDollarAmountText({
             { label: "Used", value: "$18.48" }
         ]
     }]
-}), "$ 11.52")
+}), "$11.52")
 assert.equal(catalog.remainingDollarAmountText({
     primary: { usedPercent: 0, resetDescription: "$8.93 (Paid: $8.93 / Granted: $0.00)" }
-}), "$ 8.93")
+}), "$8.93")
 assert.equal(catalog.remainingDollarAmountText({
     details: [{ title: "Credits", rows: [{ label: "Used", value: "$18.48" }] }]
 }), "")
