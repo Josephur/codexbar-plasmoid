@@ -44,3 +44,9 @@ assert.equal(
 )
 
 console.log("Catalog tests passed")
+
+assert.equal(catalog.windowUsedText({ usedPercent: 37.4 }), "37")
+assert.equal(catalog.windowRemainingText({ usedPercent: 37.4 }), "63")
+assert.equal(catalog.windowRemainingText({ usedPercent: 120 }), "0")
+assert.equal(catalog.windowRemainingText({ usageKnown: false, usedPercent: 5 }), "–")
+assert.equal(catalog.windowRemainingText(null), "–")

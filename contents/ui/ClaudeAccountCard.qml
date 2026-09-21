@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
+import org.kde.plasma.plasmoid
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 import "code/catalog.js" as Catalog
@@ -185,7 +186,9 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 PlasmaComponents3.Label {
-                    text: Catalog.windowUsedText(section.modelData.win) + i18n("% used")
+                    text: Plasmoid.configuration.fillMetersAsUsed
+                          ? Catalog.windowRemainingText(section.modelData.win) + i18n("% left")
+                          : Catalog.windowUsedText(section.modelData.win) + i18n("% used")
                     opacity: 0.75
                     font: Kirigami.Theme.smallFont
                 }

@@ -247,7 +247,9 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 PlasmaComponents3.Label {
-                    text: Catalog.windowUsedText(section.modelData.win) + i18n("% used")
+                    text: Plasmoid.configuration.fillMetersAsUsed
+                          ? Catalog.windowRemainingText(section.modelData.win) + i18n("% left")
+                          : Catalog.windowUsedText(section.modelData.win) + i18n("% used")
                     opacity: 0.75
                     font: Kirigami.Theme.smallFont
                 }

@@ -12,6 +12,7 @@ KCM.SimpleKCM {
     property alias cfg_separateIcons: separateIcons.checked
     property string cfg_panelDisplayMode
     property alias cfg_hideCritters: hideCritters.checked
+    property alias cfg_fillMetersAsUsed: fillMetersAsUsed.checked
     property alias cfg_showCost: showCost.checked
     property alias cfg_showStatus: showStatus.checked
     property alias cfg_cliPath: cliPath.text
@@ -108,6 +109,11 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: hideCritters
             text: i18n("Hide critters (plain meter bars)")
+        }
+
+        QQC2.CheckBox {
+            id: fillMetersAsUsed
+            text: i18n("Meters fill as quota is used, menu shows % left")
         }
 
         Item { Kirigami.FormData.isSection: true }

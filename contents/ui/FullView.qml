@@ -267,7 +267,9 @@ Item {
                                         anchors.rightMargin: Kirigami.Units.smallSpacing * 2
                                         height: 3
                                         visible: !tab.selected && !tab.isOverview
-                                        percent: tab.remaining >= 0 ? tab.remaining : 0
+                                        percent: tab.remaining < 0 ? 0
+                                                 : Plasmoid.configuration.fillMetersAsUsed
+                                                   ? 100 - tab.remaining : tab.remaining
                                         fillColor: tab.meta.color
                                     }
 

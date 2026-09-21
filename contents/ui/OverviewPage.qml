@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import org.kde.plasma.plasmoid
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 import "code/catalog.js" as Catalog
@@ -106,9 +107,13 @@ ColumnLayout {
                         }
 
                         PlasmaComponents3.Label {
-                            text: overviewRow.primaryWin
-                                  ? Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
-                                  : "–"
+                            text: {
+                                if (!overviewRow.primaryWin)
+                                    return "–"
+                                if (Plasmoid.configuration.fillMetersAsUsed)
+                                    return Catalog.windowRemainingText(overviewRow.primaryWin) + i18n("% left")
+                                return Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
+                            }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
                             horizontalAlignment: Text.AlignRight
@@ -130,9 +135,13 @@ ColumnLayout {
                         }
 
                         PlasmaComponents3.Label {
-                            text: overviewRow.secondaryWin
-                                  ? Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
-                                  : "–"
+                            text: {
+                                if (!overviewRow.secondaryWin)
+                                    return "–"
+                                if (Plasmoid.configuration.fillMetersAsUsed)
+                                    return Catalog.windowRemainingText(overviewRow.secondaryWin) + i18n("% left")
+                                return Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
+                            }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
                             horizontalAlignment: Text.AlignRight

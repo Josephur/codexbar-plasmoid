@@ -220,6 +220,10 @@ function windowUsedText(w) {
     return windowUsageKnown(w) ? String(normalizedPercent(w.usedPercent)) : "–"
 }
 
+function windowRemainingText(w) {
+    return windowUsageKnown(w) ? String(100 - normalizedPercent(w.usedPercent)) : "–"
+}
+
 function windowBarPercent(w) {
     return windowUsageKnown(w) ? normalizedPercent(w.usedPercent) : 0
 }

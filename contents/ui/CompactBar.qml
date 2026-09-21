@@ -147,6 +147,7 @@ MouseArea {
                     remainingSecondary: compactRoot.remainingFor(providerItem.providerId, "weekly")
                     stale: compactRoot.staleFor(providerItem.providerId)
                     hideCritters: Plasmoid.configuration.hideCritters
+                    fillUsed: Plasmoid.configuration.fillMetersAsUsed
                 }
 
                 PlasmaComponents3.Label {
