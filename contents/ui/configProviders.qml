@@ -5,12 +5,25 @@ import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import "code/catalog.js" as Catalog
 import "code/providerSources.js" as ProviderSources
+import "code/providerOverrides.js" as ProviderOverrides
 
 KCM.SimpleKCM {
     id: page
 
     property string cfg_enabledProviders
     property string cfg_providerSources
+    property string cfg_providerOverrides
+    property bool cfg_showEnabledProvidersOnly
+    // Globals the override dialog's unticked rows follow; never assigned here.
+    property string cfg_panelDisplayMode: "meters"
+    property bool cfg_showPercentInPanel: false
+    property string cfg_panelPercentSource: "session"
+    property string cfg_percentStyle: "remaining"
+    property bool cfg_hideCritters: false
+
+    // Providers with at least one override, in list order (enabled or not).
+    readonly property var overriddenIds: ProviderOverrides.overriddenProviders(
+        cfg_providerOverrides, Catalog.orderedIds())
 
     readonly property var sourceLabels: [
         i18n("Auto"), i18n("Web"), i18n("CLI"), i18n("OAuth"), i18n("API")
@@ -32,23 +45,76 @@ KCM.SimpleKCM {
         cfg_enabledProviders = list.join(",")
     }
 
+    // Ask before dropping overrides: one provider's, or everyone's for "".
+    function confirmReset(id) {
+        resetDialog.providerId = id
+        resetDialog.open()
+    }
+
+    // Staged like every other edit; the page Apply/OK commits it.
+    function applyConfirmedReset() {
+        page.cfg_providerOverrides = resetDialog.providerId === ""
+            ? ProviderOverrides.serialize({})
+            : ProviderOverrides.resetProvider(page.cfg_providerOverrides, resetDialog.providerId)
+        resetDialog.close()
+    }
+
+    function overriddenProviderLines() {
+        var enabled = page.enabledList()
+        return page.overriddenIds.map(function (id) {
+            var name = Catalog.meta(id).name
+            return enabled.indexOf(id) >= 0
+                ? "• " + name
+                : "• " + i18n("%1 (not enabled)", name)
+        }).join("\n")
+    }
+
     ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
         QQC2.Label {
             Layout.fillWidth: true
-            text: i18n("Providers are probed with the codexbar CLI. Only enable providers you actually use — each one costs a probe per refresh. The source column picks the CodexBar data source (--source) for a provider; Auto lets the CLI decide.")
+            text: i18n("Providers are probed with the codexbar CLI. Only enable providers you actually use — each one costs a probe per refresh. The source column picks the CodexBar data source (--source) for a provider; Auto lets the CLI decide. The gear button opens per-provider overrides for the panel settings; anything left unticked there follows the General page.")
             wrapMode: Text.WordWrap
             opacity: 0.7
         }
 
-        Kirigami.SearchField {
-            id: search
+        Kirigami.InlineMessage {
             Layout.fillWidth: true
+            visible: page.overriddenIds.length > 0
+            type: Kirigami.MessageType.Information
+            text: i18np("Custom panel settings are active for %1 provider.",
+                        "Custom panel settings are active for %1 providers.",
+                        page.overriddenIds.length)
+            actions: [
+                Kirigami.Action {
+                    text: i18n("Reset All…")
+                    icon.name: "edit-reset"
+                    onTriggered: page.confirmReset("")
+                }
+            ]
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            Kirigami.SearchField {
+                id: search
+                Layout.fillWidth: true
+            }
+
+            QQC2.CheckBox {
+                text: i18n("Show enabled only")
+                checked: page.cfg_showEnabledProvidersOnly
+                onToggled: page.cfg_showEnabledProvidersOnly = checked
+            }
         }
 
         Repeater {
             model: Catalog.orderedIds().filter(function (id) {
+                if (page.cfg_showEnabledProvidersOnly && page.enabledList().indexOf(id) < 0)
+                    return false
                 var q = search.text.toLowerCase()
                 if (q.length === 0)
                     return true
@@ -106,7 +172,124 @@ KCM.SimpleKCM {
                         page.cfg_providerSources, row.modelData,
                         ProviderSources.SOURCES[currentIndex])
                 }
+
+                QQC2.ToolButton {
+                    enabled: page.enabledList().indexOf(row.modelData) >= 0
+                    icon.name: "settings-configure"
+                    highlighted: ProviderOverrides.hasOverride(page.cfg_providerOverrides, row.modelData)
+                    Accessible.name: i18n("Provider settings for %1", Catalog.meta(row.modelData).name)
+                    QQC2.ToolTip.text: i18n("Per-provider panel settings for %1", Catalog.meta(row.modelData).name)
+                    QQC2.ToolTip.visible: hovered
+                    onClicked: settingsDialog.openFor(row.modelData)
+                }
+
+                QQC2.ToolButton {
+                    // Works for disabled providers too, whose gear is greyed out.
+                    enabled: page.overriddenIds.indexOf(row.modelData) >= 0
+                    icon.name: "globe"
+                    Accessible.name: i18n("Reset %1 to global defaults", Catalog.meta(row.modelData).name)
+                    QQC2.ToolTip.text: i18n("Reset %1 to global defaults", Catalog.meta(row.modelData).name)
+                    QQC2.ToolTip.visible: hovered
+                    onClicked: page.confirmReset(row.modelData)
+                }
             }
         }
+
+        // Searching while filtered hides disabled matches; point that out.
+        QQC2.Label {
+            Layout.fillWidth: true
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            visible: page.cfg_showEnabledProvidersOnly && search.text.length > 0
+            text: i18n("Can't find what you're looking for? Only enabled providers are shown. <a href=\"#\">Show all providers</a>")
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            opacity: 0.7
+            font: Kirigami.Theme.smallFont
+            onLinkActivated: page.cfg_showEnabledProvidersOnly = false
+
+            HoverHandler {
+                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+            }
+        }
+    }
+
+    ProviderOverridesDialog {
+        id: settingsDialog
+        anchors.centerIn: parent
+        width: Math.min(page.width - Kirigami.Units.gridUnit * 2, Kirigami.Units.gridUnit * 36)
+        overrides: page.cfg_providerOverrides
+        globals: ({
+            panelDisplayMode: page.cfg_panelDisplayMode,
+            showPercentInPanel: page.cfg_showPercentInPanel,
+            panelPercentSource: page.cfg_panelPercentSource,
+            percentStyle: page.cfg_percentStyle,
+            hideCritters: page.cfg_hideCritters
+        })
+        // Staged like every other edit; the page Apply/OK commits it.
+        onStaged: function (overrides) { page.cfg_providerOverrides = overrides }
+    }
+
+    QQC2.Dialog {
+        id: resetDialog
+        // Provider to reset, or "" for every provider.
+        property string providerId: ""
+        readonly property bool resetsAll: providerId === ""
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(page.width - Kirigami.Units.gridUnit * 2, Kirigami.Units.gridUnit * 24)
+        title: resetsAll
+            ? i18n("Reset all provider overrides?")
+            : i18n("Reset %1 to global defaults?", Catalog.meta(providerId).name)
+
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                text: resetDialog.resetsAll
+                    ? i18np("This provider will go back to using the General settings:",
+                            "These providers will go back to using the General settings:",
+                            page.overriddenIds.length)
+                    : i18n("%1's custom panel settings will be removed and it will follow the General settings again.",
+                           Catalog.meta(resetDialog.providerId).name)
+                wrapMode: Text.WordWrap
+            }
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.largeSpacing
+                visible: resetDialog.resetsAll
+                text: page.overriddenProviderLines()
+                wrapMode: Text.WordWrap
+            }
+
+            QQC2.Label {
+                Layout.fillWidth: true
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                text: i18n("Nothing changes until you click Apply or OK.")
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+                font: Kirigami.Theme.smallFont
+            }
+        }
+
+        footer: QQC2.DialogButtonBox {
+            QQC2.Button {
+                text: resetDialog.resetsAll ? i18n("Reset All") : i18n("Reset")
+                icon.name: "edit-reset"
+                QQC2.DialogButtonBox.buttonRole: QQC2.DialogButtonBox.AcceptRole
+                onClicked: page.applyConfirmedReset()
+            }
+            QQC2.Button {
+                id: resetCancel
+                text: i18n("Cancel")
+                icon.name: "dialog-cancel"
+                QQC2.DialogButtonBox.buttonRole: QQC2.DialogButtonBox.RejectRole
+                onClicked: resetDialog.close()
+            }
+        }
+
+        // Default to the safe choice.
+        onOpened: resetCancel.forceActiveFocus()
     }
 }

@@ -5,6 +5,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 import "code/catalog.js" as Catalog
+import "code/providerOverrides.js" as ProviderOverrides
 
 // Panel representation. Default: ONE merged critter icon showing the
 // worst-case (lowest remaining) usage across all enabled providers.
@@ -25,10 +26,20 @@ MouseArea {
                                                || displayMode === "logos-and-meters"
     readonly property bool showsMeters: displayMode === "meters"
                                                 || displayMode === "logos-and-meters"
-    readonly property bool perProvider: showsLogos || separate
-    readonly property var iconModel: perProvider && plasmoidRoot.enabledProviders.length > 0
-                                     ? plasmoidRoot.enabledProviders
-                                     : ["__merged__"]
+    // Providers following the global panel settings share the merged meter;
+    // only providers whose overrides differ get an icon of their own.
+    readonly property var panelLayout: ProviderOverrides.panelIconModel(
+        Plasmoid.configuration.providerOverrides || "",
+        plasmoidRoot.enabledProviders, {
+            panelDisplayMode: configuredDisplayMode,
+            showPercentInPanel: Plasmoid.configuration.showPercentInPanel,
+            panelPercentSource: Plasmoid.configuration.panelPercentSource,
+            percentStyle: Plasmoid.configuration.percentStyle,
+            hideCritters: Plasmoid.configuration.hideCritters
+        }, separate)
+    readonly property var iconModel: panelLayout.icons
+    // Providers aggregated by the "__merged__" icon.
+    readonly property var mergedProviders: panelLayout.merged
 
     readonly property real iconSide: vertical
         ? Math.min(Math.round(width * 0.75), Kirigami.Units.iconSizes.medium)
@@ -50,8 +61,8 @@ MouseArea {
         if (pid !== "__merged__")
             return plasmoidRoot.remainingPercent(pid, source)
         var min = -1
-        for (var i = 0; i < plasmoidRoot.enabledProviders.length; i++) {
-            var v = plasmoidRoot.remainingPercent(plasmoidRoot.enabledProviders[i], source)
+        for (var i = 0; i < mergedProviders.length; i++) {
+            var v = plasmoidRoot.remainingPercent(mergedProviders[i], source)
             if (v >= 0 && (min < 0 || v < min))
                 min = v
         }
@@ -61,11 +72,62 @@ MouseArea {
     function staleFor(pid) {
         if (pid !== "__merged__")
             return plasmoidRoot.isStale(pid)
-        for (var i = 0; i < plasmoidRoot.enabledProviders.length; i++) {
-            if (!plasmoidRoot.isStale(plasmoidRoot.enabledProviders[i]))
+        for (var i = 0; i < mergedProviders.length; i++) {
+            if (!plasmoidRoot.isStale(mergedProviders[i]))
                 return false
         }
         return true
+    }
+
+    // Effective per-icon display: the provider's override wins, else global.
+    // The merged fallback icon always uses the global settings.
+    function effectiveDisplayMode(pid) {
+        if (pid === "__merged__")
+            return displayMode
+        return ProviderOverrides.effectiveDisplayMode(
+            Plasmoid.configuration.providerOverrides, pid, configuredDisplayMode)
+    }
+
+    function showsLogosFor(pid) {
+        var mode = effectiveDisplayMode(pid)
+        return mode === "logos" || mode === "logos-and-meters"
+    }
+
+    function showsMetersFor(pid) {
+        var mode = effectiveDisplayMode(pid)
+        return mode === "meters" || mode === "logos-and-meters"
+    }
+
+    function showPercentFor(pid) {
+        if (pid === "__merged__")
+            return Plasmoid.configuration.showPercentInPanel
+        return ProviderOverrides.effectiveShowPercent(
+            Plasmoid.configuration.providerOverrides, pid,
+            Plasmoid.configuration.showPercentInPanel)
+    }
+
+    function percentSourceFor(pid) {
+        if (pid === "__merged__")
+            return Plasmoid.configuration.panelPercentSource
+        return ProviderOverrides.effectivePercentSource(
+            Plasmoid.configuration.providerOverrides, pid,
+            Plasmoid.configuration.panelPercentSource)
+    }
+
+    function percentStyleFor(pid) {
+        if (pid === "__merged__")
+            return Plasmoid.configuration.percentStyle
+        return ProviderOverrides.effectivePercentStyle(
+            Plasmoid.configuration.providerOverrides, pid,
+            Plasmoid.configuration.percentStyle)
+    }
+
+    function hideCrittersFor(pid) {
+        if (pid === "__merged__")
+            return Plasmoid.configuration.hideCritters
+        return ProviderOverrides.effectiveHideCritters(
+            Plasmoid.configuration.providerOverrides, pid,
+            Plasmoid.configuration.hideCritters)
     }
 
     function providerAt(x, y) {
@@ -81,16 +143,19 @@ MouseArea {
     }
 
     onClicked: function (mouse) {
-        // in per-provider mode, clicking a specific icon opens its tab
-        if (perProvider) {
-            var providerId = providerAt(mouse.x, mouse.y)
-            if (providerId !== "" && providerId !== "__merged__") {
-                var switchingProvider = plasmoidRoot.expanded
-                        && plasmoidRoot.currentTab !== providerId
-                plasmoidRoot.currentTab = providerId
-                if (switchingProvider)
-                    return
-            }
+        // a provider's own icon opens its tab; the merged meter closes an
+        // open popup, else opens it on the overview (or the only provider's
+        // tab when just one is enabled)
+        var target = providerAt(mouse.x, mouse.y)
+        if (target === "__merged__") {
+            if (!plasmoidRoot.expanded && plasmoidRoot.enabledProviders.length > 0)
+                plasmoidRoot.currentTab = plasmoidRoot.defaultTab()
+        } else if (target !== "") {
+            var switchingTab = plasmoidRoot.expanded
+                    && plasmoidRoot.currentTab !== target
+            plasmoidRoot.currentTab = target
+            if (switchingTab)
+                return
         }
         plasmoidRoot.expanded = !plasmoidRoot.expanded
     }
@@ -115,7 +180,7 @@ MouseArea {
                 spacing: Kirigami.Units.smallSpacing
 
                 Item {
-                    visible: compactRoot.showsLogos && providerItem.providerId !== "__merged__"
+                    visible: compactRoot.showsLogosFor(providerItem.providerId) && providerItem.providerId !== "__merged__"
                     Layout.preferredWidth: compactRoot.iconSide
                     Layout.preferredHeight: compactRoot.iconSide
                     Layout.alignment: Qt.AlignVCenter
@@ -137,7 +202,7 @@ MouseArea {
                 CritterIcon {
                     // Keep the standard merged meter as a visible, clickable
                     // fallback when a logo mode has no enabled providers.
-                    visible: compactRoot.showsMeters || providerItem.providerId === "__merged__"
+                    visible: compactRoot.showsMetersFor(providerItem.providerId) || providerItem.providerId === "__merged__"
                     // merged icon: plain meter bars like the original CodexBar status item
                     providerId: providerItem.providerId === "__merged__" ? "" : providerItem.providerId
                     Layout.preferredWidth: compactRoot.iconSide
@@ -146,22 +211,22 @@ MouseArea {
                     remainingPrimary: compactRoot.remainingFor(providerItem.providerId, "session")
                     remainingSecondary: compactRoot.remainingFor(providerItem.providerId, "weekly")
                     stale: compactRoot.staleFor(providerItem.providerId)
-                    hideCritters: Plasmoid.configuration.hideCritters
+                    hideCritters: compactRoot.hideCrittersFor(providerItem.providerId)
                 }
 
                 PlasmaComponents3.Label {
                     // Logo modes label real providers only; do not present
                     // their empty fallback as a merged percentage value.
-                    visible: Plasmoid.configuration.showPercentInPanel
-                             && (!compactRoot.showsLogos || providerItem.providerId !== "__merged__")
+                    visible: compactRoot.showPercentFor(providerItem.providerId)
+                             && (!compactRoot.showsLogosFor(providerItem.providerId) || providerItem.providerId !== "__merged__")
                     Layout.alignment: Qt.AlignVCenter
                     font.pixelSize: Math.max(9, Math.round(compactRoot.iconSide * 0.62))
                     text: {
                         var v = compactRoot.remainingFor(
-                                    providerItem.providerId, Plasmoid.configuration.panelPercentSource)
+                                    providerItem.providerId, compactRoot.percentSourceFor(providerItem.providerId))
                         if (v < 0)
                             return "–"
-                        if (Plasmoid.configuration.percentStyle === "used")
+                        if (compactRoot.percentStyleFor(providerItem.providerId) === "used")
                             v = 100 - v
                         return Math.round(v) + "%"
                     }

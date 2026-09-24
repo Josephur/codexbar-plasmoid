@@ -13,3 +13,4 @@ fi
 node tests/test-cli-status.js
 node tests/test-catalog.js
 node tests/test-provider-sources.js
+node tests/test-provider-overrides.js
