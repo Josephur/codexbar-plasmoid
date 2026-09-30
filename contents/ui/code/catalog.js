@@ -314,8 +314,21 @@ function windowUsedText(w) {
     return windowUsageKnown(w) ? String(normalizedPercent(w.usedPercent)) : "–"
 }
 
+function windowRemainingText(w) {
+    return windowUsageKnown(w) ? String(100 - normalizedPercent(w.usedPercent)) : "–"
+}
+
 function windowBarPercent(w) {
     return windowUsageKnown(w) ? normalizedPercent(w.usedPercent) : 0
+}
+
+// Bar fill under CodexBar's "Usage bars fill" preference (usageBarsShowUsed):
+// remaining quota by default, used quota when showUsed is set.
+function windowBarFill(w, showUsed) {
+    if (!windowUsageKnown(w))
+        return 0
+    var used = normalizedPercent(w.usedPercent)
+    return showUsed ? used : 100 - used
 }
 
 // Menu pace line, matching CodexBarCore UsagePace / UsagePaceText. Kimi does

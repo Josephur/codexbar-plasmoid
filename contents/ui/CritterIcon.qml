@@ -13,12 +13,14 @@ Canvas {
     property real remainingSecondary: -1
     property bool stale: false
     property bool hideCritters: false
+    property bool fillUsed: false        // fill = used percent instead of remaining
     property color baseColor: Kirigami.Theme.textColor
 
     onRemainingPrimaryChanged: requestPaint()
     onRemainingSecondaryChanged: requestPaint()
     onStaleChanged: requestPaint()
     onHideCrittersChanged: requestPaint()
+    onFillUsedChanged: requestPaint()
     onBaseColorChanged: requestPaint()
     onProviderIdChanged: requestPaint()
     onWidthChanged: requestPaint()
@@ -80,6 +82,8 @@ Canvas {
             // left-to-right fill clipped to the capsule
             if (remaining >= 0) {
                 var frac = Math.max(0, Math.min(1, remaining / 100))
+                if (fillUsed)
+                    frac = 1 - frac
                 if (frac > 0) {
                     ctx.save()
                     roundedRectPath(ctx, x, y, w, h, r)

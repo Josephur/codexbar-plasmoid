@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import org.kde.plasma.plasmoid
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.kirigami as Kirigami
 import "code/catalog.js" as Catalog
@@ -100,15 +101,19 @@ ColumnLayout {
                         UsageBar {
                             Layout.fillWidth: true
                             implicitHeight: 4
-                            percent: Catalog.windowBarPercent(overviewRow.primaryWin)
+                            percent: Catalog.windowBarFill(overviewRow.primaryWin, Plasmoid.configuration.usageBarsShowUsed)
                             fillColor: overviewRow.meta.color
                             opacity: overviewRow.primaryWin ? 1 : 0.35
                         }
 
                         PlasmaComponents3.Label {
-                            text: overviewRow.primaryWin
-                                  ? Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
-                                  : "–"
+                            text: {
+                                if (!overviewRow.primaryWin)
+                                    return "–"
+                                if (Plasmoid.configuration.usageBarsShowUsed)
+                                    return Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
+                                return Catalog.windowRemainingText(overviewRow.primaryWin) + i18n("% left")
+                            }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
                             horizontalAlignment: Text.AlignRight
@@ -124,15 +129,19 @@ ColumnLayout {
                         UsageBar {
                             Layout.fillWidth: true
                             implicitHeight: 4
-                            percent: Catalog.windowBarPercent(overviewRow.secondaryWin)
+                            percent: Catalog.windowBarFill(overviewRow.secondaryWin, Plasmoid.configuration.usageBarsShowUsed)
                             fillColor: overviewRow.meta.color
                             opacity: overviewRow.secondaryWin ? 0.75 : 0.35
                         }
 
                         PlasmaComponents3.Label {
-                            text: overviewRow.secondaryWin
-                                  ? Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
-                                  : "–"
+                            text: {
+                                if (!overviewRow.secondaryWin)
+                                    return "–"
+                                if (Plasmoid.configuration.usageBarsShowUsed)
+                                    return Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
+                                return Catalog.windowRemainingText(overviewRow.secondaryWin) + i18n("% left")
+                            }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
                             horizontalAlignment: Text.AlignRight
