@@ -77,6 +77,23 @@ render panel-vertical "$(package vertical "$three" showPercentInPanel=true showR
 render popup "$(package popup "$three")" 560x860 -f planar
 render popup-used "$(package popup-used "$three" usageBarsShowUsed=true)" 560x860 -f planar
 
+# Middle and double click on the merged meter run the configured command.
+failed=0
+marker="$work/clicked"
+plasmoidviewer -a "$(package clicks "$three" middleClickAction=command doubleClickAction=command \
+    "launchCommand=touch $marker")" -s 640x140 "${panel[@]}" >"$out/clicks.log" 2>&1 &
+clicks_pid=$!
+sleep "${SMOKE_WAIT:-15}"
+xdotool mousemove 27 70 click 2
+sleep 3
+[[ -f "$marker" ]] || { echo "Middle click did not run the command" >&2; failed=1; }
+rm -f "$marker"
+xdotool mousemove 27 70 click --repeat 2 --delay 60 1
+sleep 3
+[[ -f "$marker" ]] || { echo "Double click did not run the command" >&2; failed=1; }
+kill "$clicks_pid" 2>/dev/null || true
+wait "$clicks_pid" 2>/dev/null || true
+
 # QML runtime errors from the widget's own files fail the test, and so does
 # an applet or containment that could not be loaded at all.
 errors="$(grep -h -E 'contents/ui/.*(Error|Unable to assign|is not a function|Cannot read property|is not defined)|does not exist|Containment doesn.t exist' "$out"/*.log || true)"
@@ -85,4 +102,5 @@ if [[ -n "$errors" ]]; then
     echo "$errors" >&2
     exit 1
 fi
+[[ "$failed" == 0 ]] || exit 1
 echo "Rendered: $(cd "$out" && ls ./*.png | tr '\n' ' ')"
