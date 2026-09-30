@@ -69,6 +69,7 @@ render panel-meters "$(package meters "$three" showPercentInPanel=true panelPerc
 render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentInPanel=true)" \
     640x140 "${panel[@]}"
 render popup "$(package popup "$three")" 560x860 -f planar
+render popup-used "$(package popup-used "$three" usageBarsShowUsed=true)" 560x860 -f planar
 
 # QML runtime errors from the widget's own files fail the test, and so does
 # an applet or containment that could not be loaded at all.
