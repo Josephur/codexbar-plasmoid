@@ -175,6 +175,15 @@ function usableWindow(w) {
     return w
 }
 
+// Extra rate windows report unknown usage on the named entry rather than on
+// its window; carry it over so the window helpers treat it as unknown.
+function namedWindow(ew) {
+    var w = ew ? usableWindow(ew.window) : null
+    if (!w || ew.usageKnown !== false)
+        return w
+    return Object.assign({}, w, { usageKnown: false })
+}
+
 // The Kimi endpoint omits `windowMinutes` for its weekly window. Treat slots
 // as transport fields rather than as semantic names: providers may return
 // rate windows in either order.
@@ -191,6 +200,8 @@ function effectiveWindowMinutes(w, providerId, slot) {
 
 function windowFor(usage, providerId, wantedMinutes) {
     if (!usage) return null
+    if (providerId === "antigravity")
+        return antigravityWindowFor(usage, wantedMinutes)
     var slots = ["primary", "secondary", "tertiary"]
     for (var i = 0; i < slots.length; i++) {
         var w = usableWindow(usage[slots[i]])
@@ -204,6 +215,38 @@ function windowFor(usage, providerId, wantedMinutes) {
         if (wantedMinutes === 10080) return usableWindow(usage.secondary)
     }
     return null
+}
+
+// Antigravity reports its quota per model family. The quota summary arrives
+// as named extra windows (Gemini / Claude-GPT, 5-hour / weekly), while
+// primary and secondary only repeat the most constrained bucket of each
+// family, so neither slot means "session" or "weekly". Like CodexBarCore's
+// Antigravity presentation, pick the most constrained known bucket with the
+// wanted cadence. Local reports without a summary carry no cadence at all.
+var ANTIGRAVITY_SUMMARY_PREFIX = "antigravity-quota-summary-"
+
+function antigravitySummaryWindows(usage) {
+    var extras = usage && usage.extraRateWindows ? usage.extraRateWindows : []
+    return extras.filter(function (ew) {
+        return ew && typeof ew.id === "string"
+            && ew.id.indexOf(ANTIGRAVITY_SUMMARY_PREFIX) === 0
+    })
+}
+
+function antigravityWindowFor(usage, wantedMinutes) {
+    var summary = antigravitySummaryWindows(usage)
+    var candidates = summary.length > 0
+        ? summary.map(namedWindow)
+        : [usage.primary, usage.secondary, usage.tertiary].map(usableWindow)
+    var best = null
+    for (var i = 0; i < candidates.length; i++) {
+        var w = candidates[i]
+        if (!windowUsageKnown(w) || Number(w.windowMinutes) !== wantedMinutes)
+            continue
+        if (best === null || Number(w.usedPercent) > Number(best.usedPercent))
+            best = w
+    }
+    return best
 }
 
 function windowUsageKnown(w) {
@@ -275,6 +318,27 @@ function windowTitle(windowMinutes, fallback) {
     if (windowMinutes === 10080) return "Weekly"
     if (windowMinutes >= 40000 && windowMinutes <= 46000) return "Monthly"
     return fallback
+}
+
+// Rate-window slots the provider card lists. With an Antigravity quota
+// summary every bucket already arrives as a titled extra window, so the
+// repeated family slots are skipped and each quota is listed once.
+function cardSlots(usage, providerId) {
+    if (providerId === "antigravity" && antigravitySummaryWindows(usage).length > 0)
+        return []
+    return ["primary", "secondary", "tertiary"]
+}
+
+// Card title for a slot window. Antigravity's slots are model families
+// (CodexBarCore's session/weekly labels for it), not time windows.
+function slotTitle(providerId, slot, windowMinutes) {
+    if (providerId === "antigravity") {
+        if (slot === "primary") return "Gemini Models"
+        if (slot === "secondary") return "Claude and GPT"
+    }
+    var fallback = slot === "primary" ? "Session"
+                 : slot === "secondary" ? "Weekly" : "Monthly"
+    return windowTitle(windowMinutes, fallback)
 }
 
 // Plan text like the original card's top-right label
