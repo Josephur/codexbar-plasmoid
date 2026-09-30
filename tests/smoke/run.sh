@@ -63,10 +63,11 @@ render() {
 }
 
 three="enabledProviders=codex,claude,antigravity"
+panel=(-c org.kde.panel -f horizontal -l topedge)
 render panel-meters "$(package meters "$three" showPercentInPanel=true panelPercentSource=lowest)" \
-    480x80 -f horizontal -l bottomedge
+    640x140 "${panel[@]}"
 render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentInPanel=true)" \
-    480x80 -f horizontal -l bottomedge
+    640x140 "${panel[@]}"
 render popup "$(package popup "$three")" 560x860 -f planar
 
 # QML runtime errors from the widget's own files fail the test, and so does
