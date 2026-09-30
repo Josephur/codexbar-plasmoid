@@ -304,6 +304,35 @@ function windowUsageKnown(w) {
     return w && w.usageKnown !== false && w.usedPercent !== undefined
 }
 
+function remainingPick(w) {
+    return windowUsageKnown(w) ? { window: w, remaining: 100 - normalizedPercent(w.usedPercent) } : null
+}
+
+// The window behind a panel percentage and its remaining percent, or null.
+// source is "session" or "weekly" (each falls back to the other) or "lowest",
+// which also weighs usable extra windows such as model-scoped weekly limits,
+// since any of them can run out first.
+function panelWindow(usage, providerId, source) {
+    if (!usage)
+        return null
+    var session = remainingPick(windowFor(usage, providerId, 300))
+    var weekly = remainingPick(windowFor(usage, providerId, 10080))
+    if (source === "weekly")
+        return weekly || session
+    if (source !== "lowest")
+        return session || weekly
+    var picks = [session, weekly]
+    var extras = usage.extraRateWindows || []
+    for (var i = 0; i < extras.length; i++)
+        picks.push(remainingPick(namedWindow(extras[i])))
+    var lowest = null
+    for (var j = 0; j < picks.length; j++) {
+        if (picks[j] && (lowest === null || picks[j].remaining < lowest.remaining))
+            lowest = picks[j]
+    }
+    return lowest
+}
+
 function normalizedPercent(value) {
     var n = Number(value)
     if (!isFinite(n)) return 0
