@@ -35,6 +35,8 @@ tests/run-tests.sh                     # Python and Node tests, as in CI
 /usr/lib/qt6/bin/qmllint -I contents/ui $(find contents -name '*.qml')
 ```
 
+Every pull request also runs a Plasma smoke test (`.github/workflows/plasma-smoke.yml`): it renders the widget with `plasmoidviewer` against the mock CLI in `tests/smoke/`, fails on QML runtime errors and attaches screenshots to the workflow run. Add a scenario to `tests/smoke/run.sh` when you change what the panel or popup shows.
+
 Plasma keeps the loaded QML until it restarts (`systemctl --user restart plasma-plasmashell.service`); `plasmoidviewer -a .` from plasma-sdk is quicker for iterating.
 
 Logic that does not need QML lives in `contents/ui/code/*.js` and is tested with Node in `tests/`. Keep new helpers there so they stay testable.
