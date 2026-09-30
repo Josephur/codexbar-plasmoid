@@ -58,6 +58,10 @@ MouseArea {
     Layout.fillHeight: !vertical
 
     hoverEnabled: true
+    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+    // Target of a single click while a double click is still possible.
+    property string pendingClickTarget: ""
 
     function remainingFor(pid, source) {
         var pick = pickFor(pid, source)
@@ -139,6 +143,64 @@ MouseArea {
             Plasmoid.configuration.showResetCountdown)
     }
 
+    function clickActionFor(pid, key) {
+        var global = Plasmoid.configuration[key]
+        if (pid === "__merged__")
+            return ProviderOverrides.effectiveClickAction({}, "", key, global)
+        return ProviderOverrides.effectiveClickAction(compactRoot.overrides, pid, key, global)
+    }
+
+    function launchCommandFor(pid) {
+        return ProviderOverrides.effectiveLaunchCommand(
+            pid === "__merged__" ? {} : compactRoot.overrides, pid,
+            Plasmoid.configuration.launchCommand)
+    }
+
+    // The provider a click on the merged meter refers to: the one its
+    // percentage currently comes from.
+    function mergedClickProvider() {
+        var source = percentSourceFor("__merged__")
+        var lowest = null
+        var provider = ""
+        for (var i = 0; i < mergedProviders.length; i++) {
+            var pick = plasmoidRoot.panelPick(mergedProviders[i], source)
+            if (pick && (lowest === null || pick.remaining < lowest.remaining)) {
+                lowest = pick
+                provider = mergedProviders[i]
+            }
+        }
+        return provider !== "" ? provider : (mergedProviders[0] || "")
+    }
+
+    function runClickAction(action, pid) {
+        if (action === "refresh") {
+            if (pid === "__merged__")
+                plasmoidRoot.manualRefresh()
+            else
+                plasmoidRoot.refreshProvider(pid)
+        } else if (action === "dashboard" || action === "status") {
+            var provider = pid === "__merged__" ? mergedClickProvider() : pid
+            var url = provider !== "" ? Catalog.meta(provider)[action] : ""
+            if (url)
+                Qt.openUrlExternally(url)
+        } else if (action === "command") {
+            plasmoidRoot.runCommand(launchCommandFor(pid))
+        }
+    }
+
+    // A provider's own icon opens its tab; the merged meter toggles the popup
+    // on the last viewed tab.
+    function activate(target) {
+        if (target !== "" && target !== "__merged__") {
+            var switchingTab = plasmoidRoot.expanded
+                    && plasmoidRoot.currentTab !== target
+            plasmoidRoot.currentTab = target
+            if (switchingTab)
+                return
+        }
+        plasmoidRoot.expanded = !plasmoidRoot.expanded
+    }
+
     function hideCrittersFor(pid) {
         if (pid === "__merged__")
             return Plasmoid.configuration.hideCritters
@@ -160,17 +222,38 @@ MouseArea {
     }
 
     onClicked: function (mouse) {
-        // a provider's own icon opens its tab; the merged meter toggles the
-        // popup on the last viewed tab
         var target = providerAt(mouse.x, mouse.y)
-        if (target !== "" && target !== "__merged__") {
-            var switchingTab = plasmoidRoot.expanded
-                    && plasmoidRoot.currentTab !== target
-            plasmoidRoot.currentTab = target
-            if (switchingTab)
-                return
+        var pid = target !== "" ? target : "__merged__"
+        if (mouse.button === Qt.MiddleButton) {
+            runClickAction(clickActionFor(pid, "middleClickAction"), pid)
+            return
         }
-        plasmoidRoot.expanded = !plasmoidRoot.expanded
+        // Without a double-click action a click acts at once; with one, wait
+        // until a second click can no longer follow.
+        if (clickActionFor(pid, "doubleClickAction") === "none") {
+            activate(target)
+            return
+        }
+        pendingClickTarget = target
+        singleClickTimer.restart()
+    }
+
+    onDoubleClicked: function (mouse) {
+        if (mouse.button !== Qt.LeftButton)
+            return
+        var target = providerAt(mouse.x, mouse.y)
+        var pid = target !== "" ? target : "__merged__"
+        var action = clickActionFor(pid, "doubleClickAction")
+        if (action === "none")
+            return
+        singleClickTimer.stop()
+        runClickAction(action, pid)
+    }
+
+    Timer {
+        id: singleClickTimer
+        interval: Application.styleHints.mouseDoubleClickInterval
+        onTriggered: compactRoot.activate(compactRoot.pendingClickTarget)
     }
 
     GridLayout {

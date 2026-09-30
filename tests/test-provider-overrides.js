@@ -115,7 +115,8 @@ assert.deepEqual(plain(lib.panelIconModel("{}", [], globals, true)), { icons: ["
 // setting registry: the single source for per-provider mirroring
 assert.deepEqual(plain(lib.SETTING_KEYS),
     ["panelDisplayMode", "showPercentInPanel",
-     "panelPercentSource", "percentStyle", "showResetCountdown", "hideCritters"])
+     "panelPercentSource", "percentStyle", "showResetCountdown", "hideCritters",
+     "middleClickAction", "doubleClickAction", "launchCommand"])
 assert.equal(lib.defFor("nope"), null)
 assert.deepEqual(plain(lib.keysForSection("percentage")),
     ["panelPercentSource", "percentStyle", "showResetCountdown"])
@@ -134,6 +135,11 @@ for (const key of lib.SETTING_KEYS) {
         assert.equal(lib.isValidValue(key, true), true)
         assert.equal(lib.isValidValue(key, false), true)
         assert.equal(lib.isValidValue(key, "yes"), false)
+    } else if (def.control === "text") {
+        assert.equal(lib.isValidValue(key, "konsole -e codex"), true)
+        assert.equal(lib.isValidValue(key, "   "), false)
+        assert.equal(lib.isValidValue(key, true), false)
+        assert.equal(lib.isValidValue(key, "x".repeat(1001)), false)
     } else {
         assert.fail(`unknown control for ${key}`)
     }
@@ -143,6 +149,21 @@ for (const key of lib.SETTING_KEYS) {
 assert.equal(plain(lib.defFor("panelPercentSource")).requires, "showPercentInPanel")
 assert.equal(plain(lib.defFor("percentStyle")).requires, "showPercentInPanel")
 assert.equal(plain(lib.defFor("showResetCountdown")).requires, "showPercentInPanel")
+// click actions (#18): per-provider action and command, else the globals
+assert.deepEqual(plain(lib.keysForSection("clicks")),
+    ["middleClickAction", "doubleClickAction", "launchCommand"])
+const clicks = '{"codex":{"middleClickAction":"command","launchCommand":"  konsole -e codex  "}}'
+assert.equal(lib.effectiveClickAction(clicks, "codex", "middleClickAction", "refresh"), "command")
+assert.equal(lib.effectiveClickAction(clicks, "claude", "middleClickAction", "refresh"), "refresh")
+assert.equal(lib.effectiveClickAction(clicks, "codex", "doubleClickAction", "bogus"), "none")
+assert.equal(lib.effectiveLaunchCommand(clicks, "codex", "true"), "konsole -e codex")
+assert.equal(lib.effectiveLaunchCommand(clicks, "claude", " kitty "), "kitty")
+assert.equal(lib.effectiveLaunchCommand("{}", "claude", undefined), "")
+assert.equal(lib.serialize({ codex: { launchCommand: "  " } }), "{}")
+// a click override alone also gives the provider its own icon
+assert.deepEqual(layout('{"claude":{"middleClickAction":"refresh"}}'),
+    { icons: ["__merged__", "claude"], merged: ["codex", "gemini"] })
+
 // the reset countdown follows the global setting unless ticked
 assert.equal(lib.effectiveShowResetCountdown("{}", "codex", true), true)
 assert.equal(lib.effectiveShowResetCountdown('{"codex":{"showResetCountdown":false}}', "codex", true), false)

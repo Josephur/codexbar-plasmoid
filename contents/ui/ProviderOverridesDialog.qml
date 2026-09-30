@@ -16,7 +16,8 @@ QQC2.Dialog {
     property string overrides: "{}"
     // Global values the unticked rows follow:
     // { panelDisplayMode, showPercentInPanel, panelPercentSource, percentStyle,
-    //   showResetCountdown, hideCritters }
+    //   showResetCountdown, hideCritters, middleClickAction, doubleClickAction,
+    //   launchCommand }
     property var globals: ({})
 
     // Provider id being edited.
@@ -80,8 +81,10 @@ QQC2.Dialog {
         var keys = ProviderOverrides.SETTING_KEYS
         for (var i = 0; i < keys.length; i++) {
             // Rows whose prerequisite is off can't be edited; don't store them.
-            if (dialog.rowCustom(keys[i]) && dialog.requiresMet(keys[i]))
-                values[keys[i]] = dialog.rowValue(keys[i])
+            if (dialog.rowCustom(keys[i]) && dialog.requiresMet(keys[i])) {
+                var value = dialog.rowValue(keys[i])
+                values[keys[i]] = typeof value === "string" ? value.trim() : value
+            }
         }
         return values
     }
@@ -117,7 +120,21 @@ QQC2.Dialog {
             return i18n("Percentage")
         if (section === "critters")
             return i18n("Critters")
+        if (section === "clicks")
+            return i18n("Clicks")
         return section
+    }
+
+    function clickActionLabel(action) {
+        if (action === "refresh")
+            return i18n("Refresh")
+        if (action === "dashboard")
+            return i18n("Open usage dashboard")
+        if (action === "status")
+            return i18n("Open status page")
+        if (action === "command")
+            return i18n("Run command")
+        return i18n("Nothing")
     }
 
     function settingLabel(key) {
@@ -133,6 +150,12 @@ QQC2.Dialog {
             return i18n("Time until reset:")
         if (key === "hideCritters")
             return i18n("Critters:")
+        if (key === "middleClickAction")
+            return i18n("Middle click:")
+        if (key === "doubleClickAction")
+            return i18n("Double click:")
+        if (key === "launchCommand")
+            return i18n("Command:")
         return key
     }
 
@@ -157,6 +180,8 @@ QQC2.Dialog {
             return values.map(dialog.percentSourceLabel)
         if (key === "percentStyle")
             return values.map(dialog.percentStyleLabel)
+        if (key === "middleClickAction" || key === "doubleClickAction")
+            return values.map(dialog.clickActionLabel)
         return values
     }
 
@@ -174,6 +199,10 @@ QQC2.Dialog {
             return g.showResetCountdown ? i18n("Global: shown") : i18n("Global: hidden")
         if (key === "hideCritters")
             return g.hideCritters ? i18n("Global: plain bars") : i18n("Global: critters")
+        if (key === "middleClickAction" || key === "doubleClickAction")
+            return i18n("Global: %1", dialog.clickActionLabel(g[key]))
+        if (key === "launchCommand")
+            return g.launchCommand ? i18n("Global: %1", g.launchCommand) : i18n("Global: none")
         return ""
     }
 
@@ -342,8 +371,17 @@ QQC2.Dialog {
                                 onActivated: dialog.setRowValue(settingKey, dialog.optionValues(settingKey)[currentIndex])
                             }
 
-                            QQC2.Label {
+                            QQC2.TextField {
+                                visible: settingDef !== null && settingDef.control === "text"
+                                enabled: customBox.checked && dialog.requiresMet(settingKey)
                                 Layout.fillWidth: true
+                                placeholderText: i18n("e.g. konsole -e codex")
+                                text: dialog.rowValue(settingKey) || ""
+                                onTextEdited: dialog.setRowValue(settingKey, text)
+                            }
+
+                            QQC2.Label {
+                                Layout.fillWidth: settingDef === null || settingDef.control !== "text"
                                 horizontalAlignment: Text.AlignRight
                                 text: dialog.globalHint(settingKey)
                                 elide: Text.ElideRight

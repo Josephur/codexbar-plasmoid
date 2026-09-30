@@ -232,6 +232,17 @@ PlasmoidItem {
         bump()
     }
 
+    // Starts a user-configured launch command detached from the widget, with
+    // the same PATH the CLI gets (so ~/.local/bin tools are found).
+    function runCommand(cmd) {
+        var command = typeof cmd === "string" ? cmd.trim() : ""
+        if (command === "")
+            return
+        executable.connectSource(uniqueCliCommand(
+            commandPathPrefix + "setsid -f sh -c " + shellQuote(command) + " >/dev/null 2>&1",
+            "launch", cliState.generation))
+    }
+
     function manualRefresh() {
         if (cliSetupRequired || cliState.code === CliStatus.UNKNOWN)
             retryCli()

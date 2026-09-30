@@ -13,7 +13,10 @@
 // the stored string or a map from parse(), so a caller can parse once.
 .pragma library
 
-var SECTIONS = ["appearance", "percentage", "critters"]
+var SECTIONS = ["appearance", "percentage", "critters", "clicks"]
+
+// What a middle or double click on a panel icon does.
+var CLICK_ACTIONS = ["none", "refresh", "dashboard", "status", "command"]
 
 var DEFINITIONS = {
     panelDisplayMode: { section: "appearance", control: "enum", values: ["meters", "logos", "logos-and-meters"] },
@@ -21,13 +24,17 @@ var DEFINITIONS = {
     panelPercentSource: { section: "percentage", control: "enum", values: ["session", "weekly", "lowest"], requires: "showPercentInPanel" },
     percentStyle: { section: "percentage", control: "enum", values: ["remaining", "used"], requires: "showPercentInPanel" },
     showResetCountdown: { section: "percentage", control: "bool", requires: "showPercentInPanel" },
-    hideCritters: { section: "critters", control: "bool" }
+    hideCritters: { section: "critters", control: "bool" },
+    middleClickAction: { section: "clicks", control: "enum", values: CLICK_ACTIONS },
+    doubleClickAction: { section: "clicks", control: "enum", values: CLICK_ACTIONS },
+    launchCommand: { section: "clicks", control: "text" }
 }
 
 // Dialog order: section order, then key order within each section.
 var SETTING_KEYS = ["panelDisplayMode",
                     "showPercentInPanel", "panelPercentSource",
-                    "percentStyle", "showResetCountdown", "hideCritters"]
+                    "percentStyle", "showResetCountdown", "hideCritters",
+                    "middleClickAction", "doubleClickAction", "launchCommand"]
 
 var DISPLAY_MODES = DEFINITIONS.panelDisplayMode.values
 var PERCENT_SOURCES = DEFINITIONS.panelPercentSource.values
@@ -69,6 +76,8 @@ function isValidValue(key, value) {
         return def.values.indexOf(value) >= 0
     if (def.control === "bool")
         return typeof value === "boolean"
+    if (def.control === "text")
+        return typeof value === "string" && value.trim().length > 0 && value.length <= 1000
     return false
 }
 
@@ -216,6 +225,21 @@ function effectiveHideCritters(raw, id, globalHide) {
     if (typeof entry.hideCritters === "boolean")
         return entry.hideCritters
     return globalHide === true
+}
+
+// Click action of one kind ("middleClickAction" or "doubleClickAction").
+function effectiveClickAction(raw, id, key, globalAction) {
+    var entry = settingsFor(raw, id)
+    if (isValidValue(key, entry[key]))
+        return entry[key]
+    return isValidValue(key, globalAction) ? globalAction : "none"
+}
+
+function effectiveLaunchCommand(raw, id, globalCommand) {
+    var entry = settingsFor(raw, id)
+    if (isValidValue("launchCommand", entry.launchCommand))
+        return entry.launchCommand.trim()
+    return typeof globalCommand === "string" ? globalCommand.trim() : ""
 }
 
 function normalizeDisplayMode(mode) {
