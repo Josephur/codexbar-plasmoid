@@ -1,0 +1,48 @@
+#!/bin/sh
+# Stand-in for the CodexBar CLI in the Plasma smoke test. Prints the recorded
+# payloads in $CODEXBAR_FIXTURES with reset times relative to now.
+fixtures="${CODEXBAR_FIXTURES:?CODEXBAR_FIXTURES is not set}"
+
+iso() { date -u -d "$1" +%Y-%m-%dT%H:%M:%SZ; }
+
+serve() {
+    sed -e "s/@NOW@/$(iso now)/g" \
+        -e "s/@IN_1H@/$(iso '+1 hour')/g" \
+        -e "s/@IN_2H10M@/$(iso '+2 hours 10 minutes')/g" \
+        -e "s/@IN_3H50M@/$(iso '+3 hours 50 minutes')/g" \
+        -e "s/@IN_5H@/$(iso '+5 hours')/g" \
+        -e "s/@IN_3D@/$(iso '+3 days 4 hours')/g" \
+        -e "s/@IN_4D@/$(iso '+4 days 2 hours')/g" \
+        -e "s/@IN_5D@/$(iso '+5 days 6 hours')/g" \
+        -e "s/@IN_6D@/$(iso '+6 days 1 hour')/g" \
+        "$fixtures/$1"
+}
+
+case "${1:-}" in
+    --version | -V)
+        echo "CodexBar 0.70.0"
+        ;;
+    usage)
+        provider=""
+        while [ $# -gt 0 ]; do
+            if [ "$1" = "--provider" ]; then
+                provider="$2"
+            fi
+            shift
+        done
+        if [ -f "$fixtures/usage-$provider.json" ]; then
+            serve "usage-$provider.json"
+        else
+            # Like the real CLI: an unknown --provider reports the providers
+            # enabled in its own config instead of failing.
+            serve "usage-codex.json"
+        fi
+        ;;
+    cost)
+        echo "[]"
+        ;;
+    *)
+        echo "mock codexbar: unsupported command: $*" >&2
+        exit 2
+        ;;
+esac
