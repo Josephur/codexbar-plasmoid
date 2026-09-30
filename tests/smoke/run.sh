@@ -70,6 +70,10 @@ render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentI
     640x140 "${panel[@]}"
 render panel-override "$(package override "$three" showPercentInPanel=true \
     'providerOverrides={"claude":{"panelDisplayMode":"logos"}}')" 640x140 "${panel[@]}"
+render panel-countdown "$(package countdown "$three" panelDisplayMode=logos showPercentInPanel=true \
+    showResetCountdown=true)" 640x140 "${panel[@]}"
+render panel-vertical "$(package vertical "$three" showPercentInPanel=true showResetCountdown=true \
+    separateIcons=true)" 160x520 -c org.kde.panel -f vertical -l leftedge
 render popup "$(package popup "$three")" 560x860 -f planar
 render popup-used "$(package popup-used "$three" usageBarsShowUsed=true)" 560x860 -f planar
 

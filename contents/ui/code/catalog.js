@@ -304,6 +304,17 @@ function windowUsageKnown(w) {
     return w && w.usageKnown !== false && w.usedPercent !== undefined
 }
 
+// Time until the reset of the window behind a panel percentage ("3h 50m"),
+// or "" when it has no reset time in the future.
+function panelCountdown(pick, nowMs) {
+    if (!pick || !pick.window || !pick.window.resetsAt)
+        return ""
+    var t = Date.parse(pick.window.resetsAt)
+    if (isNaN(t) || t - nowMs < 1000)
+        return ""
+    return duration(Math.floor((t - nowMs) / 1000))
+}
+
 function remainingPick(w) {
     return windowUsageKnown(w) ? { window: w, remaining: 100 - normalizedPercent(w.usedPercent) } : null
 }
