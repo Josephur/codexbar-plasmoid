@@ -1,16 +1,18 @@
 // Provider catalog extracted from CodexBar (Sources/CodexBarCore/Providers/*).
 // Keys are the CLI --provider identifiers of the codexbar CLI; `minCli` marks
 // providers that older CLI releases within the supported range do not know.
+// `logoColor` marks a fully colored logo (its dominant intrinsic color);
+// `chipColor` replaces a brand color too light to carry the white logo.
 .pragma library
 
 var PROVIDERS = {
-    // Order follows `codexbar usage --help` (CodexBar 0.60.2).
-    "codex":        { name: "Codex",              color: "#49A3B0", dashboard: "https://chatgpt.com/codex/settings/usage", status: "https://status.openai.com/", icon: "ProviderIcon-codex.svg", critter: "codex" },
+    // Order follows `codexbar usage --help` (CodexBar 0.70.0).
+    "codex":        { name: "Codex",              color: "#49A3B0", dashboard: "https://chatgpt.com/codex/cloud/settings/analytics#usage", status: "https://status.openai.com/", icon: "ProviderIcon-codex.svg", critter: "codex" },
     "openai":       { name: "OpenAI",             color: "#0F826E", dashboard: "https://platform.openai.com/usage", status: "https://status.openai.com", icon: "ProviderIcon-codex.svg" },
     "azure-openai": { name: "Azure OpenAI",       color: "#0078D4", dashboard: "https://ai.azure.com", status: "https://azure.status.microsoft/en-us/status", icon: "ProviderIcon-codex.svg" },
     "claude":       { name: "Claude",             color: "#CC7C5E", dashboard: "https://console.anthropic.com/settings/billing", status: "https://status.claude.com/", icon: "ProviderIcon-claude.svg", critter: "claude" },
-    "clinepass":    { name: "ClinePass",          color: "#61A3FA", dashboard: "https://app.cline.bot/dashboard/subscription?personal=true", status: "", icon: "ProviderIcon-clinepass.svg", minCli: "0.44.0" },
-    "cursor":       { name: "Cursor",             color: "#00BFA5", dashboard: "https://cursor.com/dashboard?tab=usage", status: "https://status.cursor.com", icon: "ProviderIcon-cursor.svg" },
+    "clinepass":    { name: "ClinePass",          color: "#5487C8", dashboard: "https://app.cline.bot/dashboard/subscription?personal=true", status: "", icon: "ProviderIcon-clinepass.svg", minCli: "0.44.0" },
+    "cursor":       { name: "Cursor",             color: "#F54E00", dashboard: "https://cursor.com/dashboard?tab=usage", status: "https://status.cursor.com", icon: "ProviderIcon-cursor.svg" },
     "opencode":     { name: "OpenCode",           color: "#3B82F6", dashboard: "https://opencode.ai/auth", status: "", icon: "ProviderIcon-opencode.svg" },
     "opencodego":   { name: "OpenCode Go",        color: "#3B82F6", dashboard: "https://opencode.ai/auth", status: "", icon: "ProviderIcon-opencodego.svg" },
     "alibaba-coding-plan": { name: "Alibaba Coding Plan", color: "#FF6A00", dashboard: "https://modelstudio.console.alibabacloud.com/ap-southeast-1/?tab=coding-plan#/efm/coding_plan", status: "https://status.aliyun.com", icon: "ProviderIcon-alibaba.svg" },
@@ -21,59 +23,77 @@ var PROVIDERS = {
     "gemini":       { name: "Gemini",             color: "#AB87EA", dashboard: "https://gemini.google.com", status: "https://www.google.com/appsstatus/dashboard/products/npdyhgECDJ6tB66MxXyo/history", icon: "ProviderIcon-gemini.svg" },
     "antigravity":  { name: "Antigravity",        color: "#60BA7E", dashboard: "", status: "https://www.google.com/appsstatus/dashboard/products/npdyhgECDJ6tB66MxXyo/history", icon: "ProviderIcon-antigravity.svg" },
     "copilot":      { name: "Copilot",            color: "#A855F7", dashboard: "https://github.com/settings/copilot", status: "https://www.githubstatus.com/", icon: "ProviderIcon-copilot.svg" },
-    "devin":        { name: "Devin",              color: "#46B482", dashboard: "https://app.devin.ai", status: "", icon: "ProviderIcon-devin.svg" },
+    "devin":        { name: "Devin",              color: "#317CFF", dashboard: "https://app.devin.ai", status: "", icon: "ProviderIcon-devin.svg" },
     "zai":          { name: "z.ai / GLM",         color: "#E85A6A", dashboard: "https://z.ai/manage-apikey/coding-plan/personal/my-plan", status: "", icon: "ProviderIcon-zai.svg" },
     "minimax":      { name: "MiniMax",            color: "#FE603C", dashboard: "https://platform.minimax.io/user-center/payment/coding-plan?cycle_type=3", status: "", icon: "ProviderIcon-minimax.svg" },
     "manus":        { name: "Manus",              color: "#34322D", dashboard: "https://manus.im", status: "", icon: "ProviderIcon-manus.svg" },
     "kimi":         { name: "Kimi Code",          color: "#FE603C", dashboard: "https://www.kimi.com/code/console", status: "", icon: "ProviderIcon-kimi.svg" },
     "kilo":         { name: "Kilo",               color: "#F27027", dashboard: "https://app.kilo.ai/usage", status: "", icon: "ProviderIcon-kilo.svg" },
-    "kiro":         { name: "Kiro",               color: "#FF9900", dashboard: "https://app.kiro.dev/account/usage", status: "https://health.aws.amazon.com/health/status", icon: "ProviderIcon-kiro.svg" },
+    "kiro":         { name: "Kiro",               color: "#9046FF", dashboard: "https://app.kiro.dev/account/usage", status: "https://health.aws.amazon.com/health/status", icon: "ProviderIcon-kiro.svg" },
     "vertexai":     { name: "Vertex AI",          color: "#4285F4", dashboard: "https://console.cloud.google.com/vertex-ai", status: "https://status.cloud.google.com", icon: "ProviderIcon-vertexai.svg" },
-    "augment":      { name: "Augment",            color: "#6366F1", dashboard: "https://app.augmentcode.com/account/subscription", status: "https://status.augmentcode.com", icon: "ProviderIcon-augment.svg" },
+    "augment":      { name: "Augment",            color: "#1AA049", dashboard: "https://app.augmentcode.com/account/subscription", status: "https://status.augmentcode.com", icon: "ProviderIcon-augment.svg" },
     "jetbrains":    { name: "JetBrains AI",       color: "#FF3399", dashboard: "", status: "", icon: "ProviderIcon-jetbrains.svg" },
-    "moonshot":     { name: "Moonshot / Kimi API", color: "#205DEB", dashboard: "https://platform.moonshot.ai/console/account", status: "", icon: "ProviderIcon-kimi.svg" },
-    "amp":          { name: "Amp",                color: "#DC2626", dashboard: "https://ampcode.com/settings/usage", status: "", icon: "ProviderIcon-amp.svg" },
+    "moonshot":     { name: "Moonshot / Kimi Open Platform", color: "#205DEB", dashboard: "https://platform.moonshot.ai/console/account", status: "", icon: "ProviderIcon-kimi.svg" },
+    "amp":          { name: "Amp",                color: "#F34E3F", dashboard: "https://ampcode.com/settings/usage", status: "", icon: "ProviderIcon-amp.svg" },
     "t3chat":       { name: "T3 Chat",            color: "#F56647", dashboard: "https://t3.chat/settings/customization", status: "", icon: "ProviderIcon-t3chat.svg" },
     "ollama":       { name: "Ollama",             color: "#888888", dashboard: "https://ollama.com/settings", status: "", icon: "ProviderIcon-ollama.svg" },
     "synthetic":    { name: "Synthetic",          color: "#141414", dashboard: "", status: "", icon: "ProviderIcon-synthetic.svg" },
     "openrouter":   { name: "OpenRouter",         color: "#6467F2", dashboard: "https://openrouter.ai/activity", status: "https://status.openrouter.ai", icon: "ProviderIcon-openrouter.svg" },
-    "elevenlabs":   { name: "ElevenLabs",         color: "#EBEBE6", dashboard: "https://elevenlabs.io/app/developers/usage", status: "https://status.elevenlabs.io", icon: "ProviderIcon-elevenlabs.svg" },
+    "elevenlabs":   { name: "ElevenLabs",         color: "#EBEBE6", chipColor: "#000000", dashboard: "https://elevenlabs.io/app/developers/usage", status: "https://status.elevenlabs.io", icon: "ProviderIcon-elevenlabs.svg" },
     "warp":         { name: "Warp",               color: "#938BB4", dashboard: "https://docs.warp.dev/reference/cli/api-keys", status: "", icon: "ProviderIcon-warp.svg" },
     "windsurf":     { name: "Windsurf",           color: "#34E8BB", dashboard: "https://windsurf.com/subscription/usage", status: "", icon: "ProviderIcon-windsurf.svg" },
     "zed":          { name: "Zed",                color: "#084EFF", dashboard: "", status: "", icon: "ProviderIcon-zed.svg" },
     "perplexity":   { name: "Perplexity",         color: "#20B2AA", dashboard: "https://www.perplexity.ai/account/usage", status: "https://status.perplexity.com/", icon: "ProviderIcon-perplexity.svg" },
     "mimo":         { name: "Xiaomi MiMo",        color: "#FF6900", dashboard: "https://platform.xiaomimimo.com/#/console/balance", status: "", icon: "ProviderIcon-mimo.svg" },
-    "doubao":       { name: "Doubao",             color: "#3370FF", dashboard: "https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=subscribe", status: "", icon: "ProviderIcon-doubao.svg" },
+    "doubao":       { name: "Doubao",             color: "#3370FF", logoColor: "#006EFF", dashboard: "https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=subscribe", status: "", icon: "ProviderIcon-doubao.svg" },
     "sakana":       { name: "Sakana AI",          color: "#2975DB", dashboard: "https://console.sakana.ai/billing", status: "", icon: "ProviderIcon-sakana.svg" },
-    "abacusai":     { name: "Abacus AI",          color: "#38BDF8", dashboard: "https://apps.abacus.ai/chatllm/admin/compute-points-usage", status: "", icon: "ProviderIcon-abacus.svg" },
-    "mistral":      { name: "Mistral",            color: "#FF500F", dashboard: "https://admin.mistral.ai/organization/usage", status: "https://status.mistral.ai", icon: "ProviderIcon-mistral.svg" },
-    "deepseek":     { name: "DeepSeek",           color: "#527DF0", dashboard: "https://platform.deepseek.com/usage", status: "https://status.deepseek.com", icon: "ProviderIcon-deepseek.svg" },
+    "abacusai":     { name: "Abacus AI",          color: "#814EE8", dashboard: "https://apps.abacus.ai/chatllm/admin/compute-points-usage", status: "", icon: "ProviderIcon-abacus.svg" },
+    "mistral":      { name: "Mistral",            color: "#FF5229", dashboard: "https://admin.mistral.ai/organization/usage", status: "https://status.mistral.ai", icon: "ProviderIcon-mistral.svg" },
+    "deepseek":     { name: "DeepSeek",           color: "#4D6BFE", dashboard: "https://platform.deepseek.com/usage", status: "https://status.deepseek.com", icon: "ProviderIcon-deepseek.svg" },
     "deepinfra":    { name: "DeepInfra",          color: "#2A3275", dashboard: "https://deepinfra.com/dash", status: "https://status.deepinfra.com", icon: "ProviderIcon-deepinfra.svg", minCli: "0.45.0" },
-    "codebuff":     { name: "Codebuff",           color: "#44FF00", logoColor: "#44FF00", dashboard: "https://www.codebuff.com/usage", status: "", icon: "ProviderIcon-codebuff.svg" },
-    "crof":         { name: "Crof",               color: "#2EAB94", dashboard: "https://crof.ai/dashboard", status: "", icon: "ProviderIcon-crof.svg" },
-    "venice":       { name: "Venice",             color: "#3399FF", dashboard: "https://venice.ai/settings/api", status: "", icon: "ProviderIcon-venice.svg" },
-    "commandcode":  { name: "Command Code",       color: "#A04DFD", dashboard: "https://commandcode.ai/studio", status: "", icon: "ProviderIcon-commandcode.svg" },
+    "codebuff":     { name: "Codebuff",           color: "#00FF95", logoColor: "#44FF00", dashboard: "https://www.codebuff.com/usage", status: "", icon: "ProviderIcon-codebuff.svg" },
+    "venice":       { name: "Venice",             color: "#3C8FDD", dashboard: "https://venice.ai/settings/api", status: "", icon: "ProviderIcon-venice.svg" },
+    "commandcode":  { name: "Command Code",       color: "#8C4EDD", dashboard: "https://commandcode.ai/studio", status: "", icon: "ProviderIcon-commandcode.svg" },
     "qoder":        { name: "Qoder",              color: "#10B981", dashboard: "https://qoder.com/account/usage", status: "", icon: "ProviderIcon-qoder.svg" },
     "stepfun":      { name: "StepFun",            color: "#2196F2", dashboard: "https://platform.stepfun.com/plan-usage", status: "", icon: "ProviderIcon-stepfun.svg" },
-    "bedrock":      { name: "AWS Bedrock",        color: "#FF9900", dashboard: "https://console.aws.amazon.com/bedrock", status: "https://health.aws.amazon.com/health/status", icon: "ProviderIcon-bedrock.svg" },
+    "bedrock":      { name: "AWS Bedrock",        color: "#01A88D", dashboard: "https://console.aws.amazon.com/bedrock", status: "https://health.aws.amazon.com/health/status", icon: "ProviderIcon-bedrock.svg" },
     "grok":         { name: "Grok",               color: "#10A37F", dashboard: "https://grok.com/?_s=usage", status: "https://status.x.ai", icon: "ProviderIcon-grok.svg" },
     "groqcloud":    { name: "Groq",               color: "#F56844", dashboard: "https://console.groq.com/dashboard/usage", status: "https://status.groq.com", icon: "ProviderIcon-groq.svg" },
     "llmproxy":     { name: "LLM Proxy",          color: "#24B47E", dashboard: "", status: "", icon: "ProviderIcon-llmproxy.svg" },
     "litellm":      { name: "LiteLLM",            color: "#4C89F0", dashboard: "", status: "", icon: "ProviderIcon-litellm.svg" },
+    "bifrost":      { name: "Bifrost",            color: "#33C09E", dashboard: "", status: "", icon: "ProviderIcon-bifrost.svg", minCli: "0.65.0" },
+    "aixy":         { name: "Aixy",               color: "#123650", dashboard: "https://dash.aixy-gateway.com", status: "", icon: "ProviderIcon-aixy.svg", minCli: "0.67.0" },
     "deepgram":     { name: "Deepgram",           color: "#6467F2", dashboard: "https://console.deepgram.com/project/", status: "https://status.deepgram.com", icon: "ProviderIcon-deepgram.svg" },
     "poe":          { name: "Poe",                color: "#5D5CDE", dashboard: "https://poe.com/api/keys", status: "", icon: "ProviderIcon-poe.svg" },
     "chutes":       { name: "Chutes",             color: "#3184FF", dashboard: "https://chutes.ai", status: "", icon: "ProviderIcon-chutes.svg" },
-    "neuralwatt":   { name: "Neuralwatt",         color: "#38D98C", dashboard: "https://portal.neuralwatt.com/dashboard", status: "", icon: "ProviderIcon-neuralwatt.svg", minCli: "0.44.0" },
+    "neuralwatt":   { name: "Neuralwatt",         color: "#D55934", dashboard: "https://portal.neuralwatt.com/dashboard", status: "", icon: "ProviderIcon-neuralwatt.svg", minCli: "0.44.0" },
+    "helmcode":     { name: "Helmcode",           color: "#4934E1", dashboard: "https://cloud.helmcode.com/dashboard", status: "", icon: "ProviderIcon-helmcode.svg", minCli: "0.64.0" },
     "clawrouter":   { name: "ClawRouter",         color: "#596EF6", dashboard: "https://clawrouter.openclaw.ai/dashboard/access", status: "", icon: "ProviderIcon-clawrouter.svg" },
-    "longcat":      { name: "LongCat",            color: "#FFD100", dashboard: "https://longcat.chat/platform/", status: "", icon: "ProviderIcon-longcat.svg", minCli: "0.44.0" },
-    "sub2api":      { name: "sub2api",            color: "#2DC6D8", logoColor: "#2DC6D8", dashboard: "", status: "", icon: "ProviderIcon-sub2api.svg" },
+    "longcat":      { name: "LongCat",            color: "#29E154", dashboard: "https://longcat.chat/platform/", status: "", icon: "ProviderIcon-longcat.svg", minCli: "0.44.0" },
+    "sub2api":      { name: "sub2api",            color: "#14B8A6", logoColor: "#2DC6D8", dashboard: "", status: "", icon: "ProviderIcon-sub2api.svg" },
     "wayfinder":    { name: "Wayfinder",          color: "#10A37F", dashboard: "", status: "", icon: "ProviderIcon-wayfinder.svg" },
     "zenmux":       { name: "ZenMux",             color: "#6C5CE7", dashboard: "https://zenmux.ai/platform/management", status: "", icon: "ProviderIcon-zenmux.svg", minCli: "0.44.0" },
     "aiand":        { name: "ai&",                color: "#E25C2B", dashboard: "https://console.aiand.com", status: "", icon: "ProviderIcon-aiand.svg", minCli: "0.45.0" },
     "zoommate":     { name: "ZoomMate",           color: "#0B5CFF", logoColor: "#0B5CFF", dashboard: "https://zoommate.zoom.us/#/?settings=credit-usage", status: "https://www.zoomstatus.com/", icon: "ProviderIcon-zoommate.svg", minCli: "0.46.0" },
     "xai":          { name: "xAI",                color: "#8E8E93", dashboard: "https://console.x.ai", status: "https://status.x.ai", icon: "ProviderIcon-xai.svg" },
     "notion":       { name: "Notion AI",          color: "#337EA9", dashboard: "https://app.notion.com/", status: "https://status.notion.so/", icon: "ProviderIcon-notion.svg", minCli: "0.47.0" },
-    "ibmbob":       { name: "IBM Bob",            color: "#0E61FA", logoColor: "#0E61FA", dashboard: "https://bob.ibm.com", status: "https://status.bob.ibm.com", icon: "ProviderIcon-ibmbob.svg", minCli: "0.49.0" }
+    "ibmbob":       { name: "IBM Bob",            color: "#0E61FA", logoColor: "#0E61FA", dashboard: "https://bob.ibm.com", status: "https://status.bob.ibm.com", icon: "ProviderIcon-ibmbob.svg", minCli: "0.49.0" },
+    "nous":         { name: "Nous Portal",        color: "#D6A55C", dashboard: "https://portal.nousresearch.com/usage", status: "", icon: "ProviderIcon-nous.svg", minCli: "0.61.0" },
+    "muse":         { name: "Muse Code",          color: "#0668E1", dashboard: "https://dev.meta.ai", status: "", icon: "ProviderIcon-muse.svg", minCli: "0.61.0" },
+    "coderabbit":   { name: "CodeRabbit",         color: "#FF5C35", dashboard: "https://app.coderabbit.ai", status: "https://status.coderabbit.ai", icon: "ProviderIcon-coderabbit.svg", minCli: "0.61.0" },
+    "replicate":    { name: "Replicate",          color: "#000000", dashboard: "https://replicate.com/account/billing", status: "", icon: "ProviderIcon-replicate.svg", minCli: "0.61.0" },
+    "huggingface":  { name: "Hugging Face",       color: "#FFD21E", dashboard: "https://huggingface.co/settings/billing", status: "https://status.huggingface.co", icon: "ProviderIcon-huggingface.svg", minCli: "0.61.0" },
+    "raycast":      { name: "Raycast",            color: "#FF6363", dashboard: "https://www.raycast.com/settings", status: "", icon: "ProviderIcon-raycast.svg", minCli: "0.67.0" },
+    "pi":           { name: "Pi",                 color: "#7C3AED", dashboard: "https://github.com/badlogic/pi-mono", status: "", icon: "ProviderIcon-pi.svg", minCli: "0.63.0" },
+    "v0":           { name: "v0",                 color: "#111111", dashboard: "https://v0.app/settings/billing", status: "", icon: "ProviderIcon-v0.svg", minCli: "0.64.0" },
+    "typesafe":     { name: "TypeSafe",           color: "#111111", dashboard: "https://console.typesafe.ai/usage", status: "", icon: "ProviderIcon-typesafe.svg", minCli: "0.64.0" },
+    "hyper":        { name: "Charm Hyper",        color: "#FF60FF", dashboard: "https://hyper.charm.land", status: "", icon: "ProviderIcon-hyper.svg", minCli: "0.65.0" },
+    "gitkraken":    { name: "GitKraken AI",       color: "#179287", dashboard: "https://gitkraken.dev/account#ai-usage", status: "", icon: "ProviderIcon-gitkraken.svg", minCli: "0.65.0" },
+    "devpass":      { name: "DevPass",            color: "#2563EB", dashboard: "https://devpass.llmgateway.io/dashboard", status: "", icon: "ProviderIcon-devpass.svg", minCli: "0.66.0" },
+    "atlascloud":   { name: "Atlas Cloud",        color: "#5975F5", dashboard: "https://www.atlascloud.ai/console", status: "", icon: "ProviderIcon-atlascloud.svg", minCli: "0.66.0" },
+    "vercel":       { name: "Vercel AI Gateway",  color: "#FFFFFF", chipColor: "#000000", dashboard: "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway", status: "", icon: "ProviderIcon-vercel.svg", minCli: "0.66.0" },
+    "llmman":       { name: "llmman",             color: "#6CC5B0", dashboard: "", status: "", icon: "ProviderIcon-llmman.svg", minCli: "0.66.0" },
+    "xkiro":        { name: "xKiro",              color: "#52C99B", dashboard: "https://xkiro.com", status: "", icon: "ProviderIcon-xkiro.svg", minCli: "0.67.0" }
 }
 
 // Providers whose local logs the `codexbar cost` command can price.
@@ -83,18 +103,49 @@ function meta(id) {
     return PROVIDERS[id] || { name: id, color: "#888888", dashboard: "", status: "", icon: "" }
 }
 
-// A fully colored logo disappears when its intrinsic color exactly matches
-// the catalog-colored chip behind it. Keep that chip transparent instead.
+// A fully colored logo brings its own color and disappears on a chip in the
+// same or a nearby shade (upstream brand colors can move while the artwork
+// stays). Keep the chip behind such a logo transparent. Themeable logos are
+// drawn white, so a near-white brand color gets a darker chip instead.
 function logoBackgroundColor(id) {
     var provider = meta(id)
-    if (provider.logoColor
-            && provider.logoColor.toLowerCase() === provider.color.toLowerCase())
+    if (provider.logoColor)
         return "transparent"
-    return provider.color
+    return provider.chipColor || provider.color
 }
 
 function orderedIds() {
     return Object.keys(PROVIDERS)
+}
+
+// `codexbar usage --json` reports CodexBar's internal provider id, which
+// differs from the --provider name for these providers.
+var REPORTED_PROVIDER_IDS = {
+    "azure-openai": "azureopenai",
+    "alibaba-coding-plan": "alibaba",
+    "alibaba-token-plan": "alibabatokenplan",
+    "qwen-cloud": "qwencloud",
+    "abacusai": "abacus",
+    "groqcloud": "groq"
+}
+
+function reportedProviderId(id) {
+    return REPORTED_PROVIDER_IDS[id] || id
+}
+
+// The CLI does not reject a --provider name it does not know (a provider
+// that is newer than the installed CLI, or one removed upstream); it reports
+// the providers enabled in its own config instead. Keep only the entries of
+// the requested provider. Entries without a provider field are kept.
+function entriesForProvider(entries, id) {
+    if (!Array.isArray(entries))
+        return []
+    var reported = reportedProviderId(id)
+    return entries.filter(function (entry) {
+        return entry !== null && typeof entry === "object"
+            && (typeof entry.provider !== "string"
+                || entry.provider === reported || entry.provider === id)
+    })
 }
 
 // --- formatting helpers (mirror CodexBar's UsageFormatter) ---
