@@ -14,6 +14,9 @@ KCM.SimpleKCM {
     property string cfg_panelDisplayMode
     property alias cfg_hideCritters: hideCritters.checked
     property bool cfg_usageBarsShowUsed
+    property string cfg_middleClickAction
+    property string cfg_doubleClickAction
+    property alias cfg_launchCommand: launchCommand.text
     property alias cfg_showCost: showCost.checked
     property alias cfg_showStatus: showStatus.checked
     property alias cfg_cliPath: cliPath.text
@@ -26,11 +29,16 @@ KCM.SimpleKCM {
     readonly property var sourceValues: ["session", "weekly", "lowest"]
     readonly property var styleValues: ["remaining", "used"]
     readonly property var displayModeValues: ["meters", "logos", "logos-and-meters"]
+    readonly property var clickActionValues: ["none", "refresh", "dashboard", "status", "command"]
+    readonly property var clickActionLabels: [i18n("Nothing"), i18n("Refresh"),
+        i18n("Open usage dashboard"), i18n("Open status page"), i18n("Run command")]
 
     onCfg_panelPercentSourceChanged: sourceCombo.sync()
     onCfg_percentStyleChanged: styleCombo.sync()
     onCfg_panelDisplayModeChanged: displayModeCombo.sync()
     onCfg_usageBarsShowUsedChanged: usageBarsFillCombo.sync()
+    onCfg_middleClickActionChanged: middleClickCombo.sync()
+    onCfg_doubleClickActionChanged: doubleClickCombo.sync()
 
     Kirigami.FormLayout {
 
@@ -128,6 +136,45 @@ KCM.SimpleKCM {
             }
             Component.onCompleted: sync()
             onActivated: page.cfg_usageBarsShowUsed = currentIndex === 1
+        }
+
+        Item { Kirigami.FormData.isSection: true }
+
+        QQC2.ComboBox {
+            id: middleClickCombo
+            Kirigami.FormData.label: i18n("Middle click:")
+            model: page.clickActionLabels
+            function sync() {
+                currentIndex = Math.max(0, page.clickActionValues.indexOf(page.cfg_middleClickAction))
+            }
+            Component.onCompleted: sync()
+            onActivated: page.cfg_middleClickAction = page.clickActionValues[currentIndex]
+        }
+
+        QQC2.ComboBox {
+            id: doubleClickCombo
+            Kirigami.FormData.label: i18n("Double click:")
+            model: page.clickActionLabels
+            function sync() {
+                currentIndex = Math.max(0, page.clickActionValues.indexOf(page.cfg_doubleClickAction))
+            }
+            Component.onCompleted: sync()
+            onActivated: page.cfg_doubleClickAction = page.clickActionValues[currentIndex]
+        }
+
+        QQC2.TextField {
+            id: launchCommand
+            Kirigami.FormData.label: i18n("Command:")
+            placeholderText: i18n("e.g. konsole -e codex")
+            Layout.fillWidth: true
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            text: i18n("Used by \"Run command\". A provider's own icon follows its settings on the Providers page; on the merged meter, the dashboard and status page open for the provider it currently shows.")
+            wrapMode: Text.WordWrap
+            opacity: 0.7
+            font: Kirigami.Theme.smallFont
         }
 
         Item { Kirigami.FormData.isSection: true }

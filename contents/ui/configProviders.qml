@@ -20,6 +20,9 @@ KCM.SimpleKCM {
     property string cfg_percentStyle: "remaining"
     property bool cfg_showResetCountdown: false
     property bool cfg_hideCritters: false
+    property string cfg_middleClickAction: "none"
+    property string cfg_doubleClickAction: "none"
+    property string cfg_launchCommand
     // View filter only: not a setting, so toggling it is no pending change.
     property bool showEnabledOnly: false
 
@@ -175,7 +178,10 @@ KCM.SimpleKCM {
             panelPercentSource: page.cfg_panelPercentSource,
             percentStyle: page.cfg_percentStyle,
             showResetCountdown: page.cfg_showResetCountdown,
-            hideCritters: page.cfg_hideCritters
+            hideCritters: page.cfg_hideCritters,
+            middleClickAction: page.cfg_middleClickAction,
+            doubleClickAction: page.cfg_doubleClickAction,
+            launchCommand: page.cfg_launchCommand
         })
         // Staged like every other edit; the page Apply/OK commits it.
         onStaged: function (overrides) { page.cfg_providerOverrides = overrides }
