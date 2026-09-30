@@ -133,6 +133,8 @@ tests/run-tests.sh
 ```
 
 `scripts/build-plasmoid.sh` builds the same minimal package used for releases from the committed `HEAD` (or a Git ref such as `v0.3.1`) and writes the `.plasmoid` plus its SHA-256 checksum under `dist/`. Existing output is preserved unless `--force` is supplied. The archive contains only `metadata.json`, `contents/` and `LICENSE`.
+
+Before opening a pull request, read [CONTRIBUTING.md](CONTRIBUTING.md): which settings belong in CodexBar's `config.json` and which in the widget, and what a reviewable pull request looks like.
 </details>
 
 ## ⚙️ Behavior notes
