@@ -1,5 +1,5 @@
 # Provider identifiers accepted by `codexbar usage --provider`, in the order
-# printed by `codexbar usage --help` of CodexBar CLI 0.60.2. Regenerate with:
+# printed by `codexbar usage --help` of CodexBar CLI 0.70.0. Regenerate with:
 #   codexbar usage --help | grep -o -- '--provider [^]]*' | tr '|' '\n'
 # (drop the trailing "both" and "all" selectors).
 codex
@@ -47,7 +47,6 @@ mistral
 deepseek
 deepinfra
 codebuff
-crof
 venice
 commandcode
 qoder
@@ -57,10 +56,13 @@ grok
 groqcloud
 llmproxy
 litellm
+bifrost
+aixy
 deepgram
 poe
 chutes
 neuralwatt
+helmcode
 clawrouter
 longcat
 sub2api
@@ -71,3 +73,19 @@ zoommate
 xai
 notion
 ibmbob
+nous
+muse
+coderabbit
+replicate
+huggingface
+raycast
+pi
+v0
+typesafe
+hyper
+gitkraken
+devpass
+atlascloud
+vercel
+llmman
+xkiro

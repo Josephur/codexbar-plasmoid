@@ -26,6 +26,14 @@ def version_tuple(text):
     return tuple(int(part) for part in text.split("."))
 
 
+def relative_luminance(color):
+    channels = []
+    for offset in (1, 3, 5):
+        value = int(color[offset:offset + 2], 16) / 255
+        channels.append(value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+
+
 class CatalogTests(unittest.TestCase):
     def setUp(self):
         self.entries = catalog_entries()
@@ -67,13 +75,26 @@ class CatalogTests(unittest.TestCase):
                 self.assertRegex(fields["minCli"], r"^\d+\.\d+\.\d+$")
                 self.assertGreater(version_tuple(fields["minCli"]), version_tuple(minimum))
 
-    def test_logo_color_matches_brand_color_for_colored_marks(self):
-        # A colored logo whose intrinsic color equals the chip color would
-        # vanish on that chip; the catalog marks those so the chip stays clear.
+    def test_logo_color_marks_fully_colored_logos(self):
+        # logoColor keeps the chip transparent, which only suits artwork that
+        # brings its own colors instead of the themeable white logo.
         for provider, fields in self.entries.items():
             if "logoColor" in fields:
                 with self.subTest(provider=provider):
-                    self.assertEqual(fields["logoColor"].lower(), fields["color"].lower())
+                    self.assertRegex(fields["logoColor"], r"^#[0-9A-Fa-f]{6}$")
+                    icon = (ICON_DIR / fields["icon"]).read_text(encoding="utf-8")
+                    self.assertNotIn("ColorScheme-Text", icon)
+
+    def test_themeable_logos_sit_on_dark_enough_chips(self):
+        # Themeable logos are drawn white on the chip; a near-white brand
+        # color (Vercel, ElevenLabs) needs a darker chipColor to keep it visible.
+        for provider, fields in self.entries.items():
+            if "logoColor" in fields:
+                continue
+            chip = fields.get("chipColor", fields["color"])
+            with self.subTest(provider=provider):
+                self.assertRegex(chip, r"^#[0-9A-Fa-f]{6}$")
+                self.assertLess(relative_luminance(chip), 0.75)
 
 
 if __name__ == "__main__":

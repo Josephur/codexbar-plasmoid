@@ -32,17 +32,15 @@ ColumnLayout {
         var out = []
         if (!usage)
             return out
-        var slots = ["primary", "secondary", "tertiary"]
+        var slots = Catalog.cardSlots(usage, providerId)
         for (var i = 0; i < slots.length; i++) {
             var slot = slots[i]
             var w = Catalog.usableWindow(usage[slot])
             if (!w)
                 continue
             var minutes = Catalog.effectiveWindowMinutes(w, providerId, slot)
-            var fallback = slot === "primary" ? "Session"
-                         : slot === "secondary" ? "Weekly" : "Monthly"
             out.push({
-                title: Catalog.windowTitle(minutes, fallback),
+                title: Catalog.slotTitle(providerId, slot, minutes),
                 win: w,
                 minutes: minutes,
                 pace: minutes === 10080 && entry.pace && entry.pace.secondary
@@ -61,7 +59,7 @@ ColumnLayout {
         if (usage.extraRateWindows) {
             for (var i = 0; i < usage.extraRateWindows.length; i++) {
                 var ew = usage.extraRateWindows[i]
-                var w = ew ? Catalog.usableWindow(ew.window) : null
+                var w = Catalog.namedWindow(ew)
                 if (w)
                     out.push({
                         title: ew.title || "Extra",
