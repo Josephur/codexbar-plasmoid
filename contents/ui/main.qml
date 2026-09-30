@@ -406,7 +406,21 @@ PlasmoidItem {
             loadConfig(force)
             return
         }
+        // Leaving config mode (an older CLI) re-runs this through
+        // onEnabledProvidersChanged with the widget's own list.
+        if (leaveConfigMode())
+            return
         probeAll(force)
+    }
+
+    // Back to the widget's own provider list; true when that changed it.
+    function leaveConfigMode() {
+        if (Plasmoid.configuration.configProviders !== "")
+            Plasmoid.configuration.configProviders = ""
+        if (configProviderList === null)
+            return false
+        configProviderList = null
+        return true
     }
 
     function loadConfig(force) {
@@ -601,8 +615,8 @@ PlasmoidItem {
                                              Catalog.cliProviderId)
             if (list === null) {
                 // config.json could not be read: keep the widget's own list.
-                configProviderList = null
-                probeAll(configReq.force)
+                if (!leaveConfigMode())
+                    probeAll(configReq.force)
                 return
             }
             for (var n = 0; n < list.length; n++)
@@ -628,8 +642,8 @@ PlasmoidItem {
                 // Keep the widget's own list rather than losing it.
                 console.warn("codexbar: moving the provider list to config.json failed, exit", exitCode)
                 configMigrationFailed = true
-                configProviderList = null
-                probeAll(writeReq.force)
+                if (!leaveConfigMode())
+                    probeAll(writeReq.force)
                 return
             }
             if (exitCode !== 0)
