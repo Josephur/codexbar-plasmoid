@@ -60,15 +60,22 @@ MouseArea {
     hoverEnabled: true
 
     function remainingFor(pid, source) {
+        var pick = pickFor(pid, source)
+        return pick ? pick.remaining : -1
+    }
+
+    // The window behind an icon's percentage; the merged meter takes the
+    // provider that is lowest for that source.
+    function pickFor(pid, source) {
         if (pid !== "__merged__")
-            return plasmoidRoot.remainingPercent(pid, source)
-        var min = -1
+            return plasmoidRoot.panelPick(pid, source)
+        var lowest = null
         for (var i = 0; i < mergedProviders.length; i++) {
-            var v = plasmoidRoot.remainingPercent(mergedProviders[i], source)
-            if (v >= 0 && (min < 0 || v < min))
-                min = v
+            var pick = plasmoidRoot.panelPick(mergedProviders[i], source)
+            if (pick && (lowest === null || pick.remaining < lowest.remaining))
+                lowest = pick
         }
-        return min
+        return lowest
     }
 
     function staleFor(pid) {
@@ -122,6 +129,14 @@ MouseArea {
         return ProviderOverrides.effectivePercentStyle(
             compactRoot.overrides, pid,
             Plasmoid.configuration.percentStyle)
+    }
+
+    function showCountdownFor(pid) {
+        if (pid === "__merged__")
+            return Plasmoid.configuration.showResetCountdown
+        return ProviderOverrides.effectiveShowResetCountdown(
+            compactRoot.overrides, pid,
+            Plasmoid.configuration.showResetCountdown)
     }
 
     function hideCrittersFor(pid) {
@@ -213,21 +228,42 @@ MouseArea {
                     fillUsed: Plasmoid.configuration.usageBarsShowUsed
                 }
 
-                PlasmaComponents3.Label {
+                ColumnLayout {
+                    id: percentBlock
+                    readonly property var pick: compactRoot.pickFor(
+                        providerItem.providerId, compactRoot.percentSourceFor(providerItem.providerId))
+                    // Time until the same window resets, like upstream's
+                    // "Percent + reset" menu bar layout.
+                    readonly property string countdown: compactRoot.showCountdownFor(providerItem.providerId)
+                        ? Catalog.panelCountdown(pick, plasmoidRoot.nowMs) : ""
                     // Logo modes label real providers only; do not present
                     // their empty fallback as a merged percentage value.
                     visible: compactRoot.showPercentFor(providerItem.providerId)
                              && (!compactRoot.showsLogosFor(providerItem.providerId) || providerItem.providerId !== "__merged__")
                     Layout.alignment: Qt.AlignVCenter
-                    font.pixelSize: Math.max(9, Math.round(compactRoot.iconSide * 0.62))
-                    text: {
-                        var v = compactRoot.remainingFor(
-                                    providerItem.providerId, compactRoot.percentSourceFor(providerItem.providerId))
-                        if (v < 0)
-                            return "–"
-                        if (compactRoot.percentStyleFor(providerItem.providerId) === "used")
-                            v = 100 - v
-                        return Math.round(v) + "%"
+                    spacing: 0
+
+                    PlasmaComponents3.Label {
+                        font.pixelSize: Math.max(9, Math.round(compactRoot.iconSide * 0.62))
+                        text: {
+                            if (!percentBlock.pick)
+                                return "–"
+                            var v = percentBlock.pick.remaining
+                            if (compactRoot.percentStyleFor(providerItem.providerId) === "used")
+                                v = 100 - v
+                            // Horizontal panels keep a single line.
+                            if (percentBlock.countdown !== "" && !compactRoot.vertical)
+                                return Math.round(v) + "% · " + percentBlock.countdown
+                            return Math.round(v) + "%"
+                        }
+                    }
+
+                    PlasmaComponents3.Label {
+                        // Vertical panels are narrow: the countdown goes below.
+                        visible: compactRoot.vertical && percentBlock.countdown !== ""
+                        text: percentBlock.countdown
+                        font.pixelSize: Math.max(8, Math.round(compactRoot.iconSide * 0.45))
+                        opacity: 0.8
                     }
                 }
             }

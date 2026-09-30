@@ -15,7 +15,8 @@ QQC2.Dialog {
     // Current providerOverrides string (bind to the page's cfg_ property).
     property string overrides: "{}"
     // Global values the unticked rows follow:
-    // { panelDisplayMode, showPercentInPanel, panelPercentSource, percentStyle, hideCritters }
+    // { panelDisplayMode, showPercentInPanel, panelPercentSource, percentStyle,
+    //   showResetCountdown, hideCritters }
     property var globals: ({})
 
     // Provider id being edited.
@@ -128,6 +129,8 @@ QQC2.Dialog {
             return i18n("Percentage window:")
         if (key === "percentStyle")
             return i18n("Percentage shows:")
+        if (key === "showResetCountdown")
+            return i18n("Time until reset:")
         if (key === "hideCritters")
             return i18n("Critters:")
         return key
@@ -167,6 +170,8 @@ QQC2.Dialog {
             return i18n("Global: %1", dialog.percentSourceLabel(g.panelPercentSource))
         if (key === "percentStyle")
             return i18n("Global: %1", dialog.percentStyleLabel(g.percentStyle))
+        if (key === "showResetCountdown")
+            return g.showResetCountdown ? i18n("Global: shown") : i18n("Global: hidden")
         if (key === "hideCritters")
             return g.hideCritters ? i18n("Global: plain bars") : i18n("Global: critters")
         return ""
@@ -262,6 +267,8 @@ QQC2.Dialog {
             : dialog.previewSampleSession
         if (ProviderOverrides.effectivePercentStyle(raw, dialog.providerId, dialog.globals.percentStyle) === "used")
             v = 100 - v
+        if (ProviderOverrides.effectiveShowResetCountdown(raw, dialog.providerId, dialog.globals.showResetCountdown))
+            return Math.round(v) + "% · 3h 50m"
         return Math.round(v) + "%"
     }
 

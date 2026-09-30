@@ -9,6 +9,7 @@ KCM.SimpleKCM {
 
     property alias cfg_refreshIntervalMinutes: refreshSpin.value
     property alias cfg_showPercentInPanel: showPercent.checked
+    property alias cfg_showResetCountdown: showResetCountdown.checked
     property alias cfg_separateIcons: separateIcons.checked
     property string cfg_panelDisplayMode
     property alias cfg_hideCritters: hideCritters.checked
@@ -79,6 +80,12 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: showPercent
             text: i18n("Show percentage next to the icon")
+        }
+
+        QQC2.CheckBox {
+            id: showResetCountdown
+            text: i18n("Show time until reset")
+            enabled: showPercent.checked
         }
 
         Item { Kirigami.FormData.isSection: true }

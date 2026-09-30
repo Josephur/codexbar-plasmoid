@@ -18,6 +18,7 @@ KCM.SimpleKCM {
     property bool cfg_showPercentInPanel: false
     property string cfg_panelPercentSource: "session"
     property string cfg_percentStyle: "remaining"
+    property bool cfg_showResetCountdown: false
     property bool cfg_hideCritters: false
     // View filter only: not a setting, so toggling it is no pending change.
     property bool showEnabledOnly: false
@@ -173,6 +174,7 @@ KCM.SimpleKCM {
             showPercentInPanel: page.cfg_showPercentInPanel,
             panelPercentSource: page.cfg_panelPercentSource,
             percentStyle: page.cfg_percentStyle,
+            showResetCountdown: page.cfg_showResetCountdown,
             hideCritters: page.cfg_hideCritters
         })
         // Staged like every other edit; the page Apply/OK commits it.

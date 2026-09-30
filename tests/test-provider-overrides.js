@@ -115,10 +115,10 @@ assert.deepEqual(plain(lib.panelIconModel("{}", [], globals, true)), { icons: ["
 // setting registry: the single source for per-provider mirroring
 assert.deepEqual(plain(lib.SETTING_KEYS),
     ["panelDisplayMode", "showPercentInPanel",
-     "panelPercentSource", "percentStyle", "hideCritters"])
+     "panelPercentSource", "percentStyle", "showResetCountdown", "hideCritters"])
 assert.equal(lib.defFor("nope"), null)
 assert.deepEqual(plain(lib.keysForSection("percentage")),
-    ["panelPercentSource", "percentStyle"])
+    ["panelPercentSource", "percentStyle", "showResetCountdown"])
 assert.deepEqual(plain(lib.keysForSection("nope")), [])
 
 // every registry entry is well formed and validation follows it
@@ -142,6 +142,11 @@ for (const key of lib.SETTING_KEYS) {
 // percentage rows depend on the effective show-percentage value
 assert.equal(plain(lib.defFor("panelPercentSource")).requires, "showPercentInPanel")
 assert.equal(plain(lib.defFor("percentStyle")).requires, "showPercentInPanel")
+assert.equal(plain(lib.defFor("showResetCountdown")).requires, "showPercentInPanel")
+// the reset countdown follows the global setting unless ticked
+assert.equal(lib.effectiveShowResetCountdown("{}", "codex", true), true)
+assert.equal(lib.effectiveShowResetCountdown('{"codex":{"showResetCountdown":false}}', "codex", true), false)
+assert.equal(lib.effectiveShowResetCountdown('{"codex":{"showResetCountdown":"yes"}}', "codex", false), false)
 assert.equal("requires" in plain(lib.defFor("showPercentInPanel")), false)
 
 // footer preview: uncommitted dialog values serialize, then the panel's own

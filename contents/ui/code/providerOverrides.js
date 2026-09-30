@@ -20,13 +20,14 @@ var DEFINITIONS = {
     showPercentInPanel: { section: "appearance", control: "bool" },
     panelPercentSource: { section: "percentage", control: "enum", values: ["session", "weekly", "lowest"], requires: "showPercentInPanel" },
     percentStyle: { section: "percentage", control: "enum", values: ["remaining", "used"], requires: "showPercentInPanel" },
+    showResetCountdown: { section: "percentage", control: "bool", requires: "showPercentInPanel" },
     hideCritters: { section: "critters", control: "bool" }
 }
 
 // Dialog order: section order, then key order within each section.
 var SETTING_KEYS = ["panelDisplayMode",
                     "showPercentInPanel", "panelPercentSource",
-                    "percentStyle", "hideCritters"]
+                    "percentStyle", "showResetCountdown", "hideCritters"]
 
 var DISPLAY_MODES = DEFINITIONS.panelDisplayMode.values
 var PERCENT_SOURCES = DEFINITIONS.panelPercentSource.values
@@ -201,6 +202,13 @@ function effectivePercentStyle(raw, id, globalStyle) {
     if (isValidPercentStyle(entry.percentStyle))
         return entry.percentStyle
     return isValidPercentStyle(globalStyle) ? globalStyle : DEFAULT_PERCENT_STYLE
+}
+
+function effectiveShowResetCountdown(raw, id, globalShow) {
+    var entry = settingsFor(raw, id)
+    if (typeof entry.showResetCountdown === "boolean")
+        return entry.showResetCountdown
+    return globalShow === true
 }
 
 function effectiveHideCritters(raw, id, globalHide) {

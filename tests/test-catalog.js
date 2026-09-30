@@ -154,4 +154,14 @@ assert.equal(catalog.panelWindow({ primary: { usedPercent: 10, windowMinutes: 30
 assert.equal(catalog.panelWindow({}, "codex", "lowest"), null)
 assert.equal(catalog.panelWindow(null, "codex", "session"), null)
 
+// Reset countdown (#30): the window behind the panel percentage
+const countdownNow = Date.parse("2026-09-30T12:00:00Z")
+const pickAt = (resetsAt) => ({ remaining: 60, window: { usedPercent: 40, resetsAt } })
+assert.equal(catalog.panelCountdown(pickAt("2026-09-30T15:50:00Z"), countdownNow), "3h 50m")
+assert.equal(catalog.panelCountdown(pickAt("2026-10-04T01:00:00Z"), countdownNow), "3d 13h")
+assert.equal(catalog.panelCountdown(pickAt("2026-09-30T11:00:00Z"), countdownNow), "")
+assert.equal(catalog.panelCountdown(pickAt("not a date"), countdownNow), "")
+assert.equal(catalog.panelCountdown({ remaining: 60, window: { usedPercent: 40 } }, countdownNow), "")
+assert.equal(catalog.panelCountdown(null, countdownNow), "")
+
 console.log("Catalog tests passed")

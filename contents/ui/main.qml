@@ -632,13 +632,18 @@ PlasmoidItem {
         }
     }
 
-    // remaining percent for the panel icon / percent label; -1 = unknown
-    function remainingPercent(p, source) {
+    // the window behind a panel percentage and its remaining percent, or null
+    function panelPick(p, source) {
         rev
         var d = usageData[p]
         if (!d || !d.entry || !d.entry.usage)
-            return -1
-        var pick = Catalog.panelWindow(d.entry.usage, p, source)
+            return null
+        return Catalog.panelWindow(d.entry.usage, p, source)
+    }
+
+    // remaining percent for the panel icon / percent label; -1 = unknown
+    function remainingPercent(p, source) {
+        var pick = panelPick(p, source)
         return pick ? pick.remaining : -1
     }
 
