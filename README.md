@@ -7,7 +7,7 @@
 **Your AI coding limits, always visible in the panel.**
 
 A faithful KDE Plasma port of [CodexBar](https://github.com/steipete/CodexBar), Peter Steinberger's macOS menu bar app.
-Codex, Claude, Cursor, Copilot, Gemini and 60+ more providers, driven by the official CodexBar CLI.
+Codex, Claude, Cursor, Copilot, Gemini and 80+ more providers, driven by the official CodexBar CLI.
 
 [![Release](https://img.shields.io/github/v/release/psimaker/codexbar-plasmoid?style=flat-square&color=1d99f3)](https://github.com/psimaker/codexbar-plasmoid/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/psimaker/codexbar-plasmoid/package-plasmoid.yml?branch=main&style=flat-square&label=CI)](https://github.com/psimaker/codexbar-plasmoid/actions/workflows/package-plasmoid.yml)
@@ -43,7 +43,7 @@ Options: `--widget-only`, `--cli-only`, `--version v0.4.0`. The scripts are plai
 - **Panel icon in the original look.** Two meter capsules (session on top, weekly below), fill = remaining quota, dimmed when data is stale. One merged icon showing the worst case across providers by default, or one icon per provider with the original "critter" faces for Codex and Claude. Optional percentage label, or provider logos instead of meters.
 - **Popup like the original menu.** Provider switcher tabs with brand-colored quota bars, an overview page, and per provider: session / weekly / extra rate windows ("Codex Spark", model-scoped weekly caps, …) with progress bars, reset countdowns and a pace line, Codex reset credits, local cost (today / last 30 days via `codexbar cost`), provider status, account info, and the CLI's detail rows (balances, monthly spend, credit pools, …).
 - **Actions.** Refresh, cost-history refresh, Usage Dashboard, Status Page, Settings, About.
-- **69 providers.** Everything the CodexBar CLI supports, enable only what you use.
+- **87 providers.** Everything the CodexBar CLI supports, enable only what you use.
 - **Optional Claude multi-account view.** Stacked 5-hour and 7-day cards per account with explicit switching through a schema-v1 [`claude-swap`](https://github.com/realiti4/claude-swap) adapter.
 
 <div align="center">
@@ -54,10 +54,10 @@ Options: `--widget-only`, `--cli-only`, `--version v0.4.0`. The scripts are plai
 </div>
 
 <details>
-<summary><b>All 69 supported providers</b></summary>
+<summary><b>All 87 supported providers</b></summary>
 <br>
 
-Codex · OpenAI · Azure OpenAI · Claude · ClinePass · Cursor · OpenCode · OpenCode Go · Alibaba Coding Plan · Alibaba Token Plan · Qwen Cloud · Droid · Fireworks · Gemini · Antigravity · Copilot · Devin · z.ai / GLM · MiniMax · Manus · Kimi Code · Kilo · Kiro · Vertex AI · Augment · JetBrains AI · Moonshot / Kimi API · Amp · T3 Chat · Ollama · Synthetic · OpenRouter · ElevenLabs · Warp · Windsurf · Zed · Perplexity · Xiaomi MiMo · Doubao · Sakana AI · Abacus AI · Mistral · DeepSeek · DeepInfra · Codebuff · Crof · Venice · Command Code · Qoder · StepFun · AWS Bedrock · Grok · Groq · LLM Proxy · LiteLLM · Deepgram · Poe · Chutes · Neuralwatt · ClawRouter · LongCat · sub2api · Wayfinder · ZenMux · ai& · ZoomMate · xAI · Notion AI · IBM Bob
+Codex · OpenAI · Azure OpenAI · Claude · ClinePass · Cursor · OpenCode · OpenCode Go · Alibaba Coding Plan · Alibaba Token Plan · Qwen Cloud · Droid · Fireworks · Gemini · Antigravity · Copilot · Devin · z.ai / GLM · MiniMax · Manus · Kimi Code · Kilo · Kiro · Vertex AI · Augment · JetBrains AI · Moonshot / Kimi Open Platform · Amp · T3 Chat · Ollama · Synthetic · OpenRouter · ElevenLabs · Warp · Windsurf · Zed · Perplexity · Xiaomi MiMo · Doubao · Sakana AI · Abacus AI · Mistral · DeepSeek · DeepInfra · Codebuff · Venice · Command Code · Qoder · StepFun · AWS Bedrock · Grok · Groq · LLM Proxy · LiteLLM · Bifrost · Aixy · Deepgram · Poe · Chutes · Neuralwatt · Helmcode · ClawRouter · LongCat · sub2api · Wayfinder · ZenMux · ai& · ZoomMate · xAI · Notion AI · IBM Bob · Nous Portal · Muse Code · CodeRabbit · Replicate · Hugging Face · Raycast · Pi · v0 · TypeSafe · Charm Hyper · GitKraken AI · DevPass · Atlas Cloud · Vercel AI Gateway · llmman · xKiro
 
 Provider logins are handled by the provider tools themselves (Claude Code, Codex CLI, API keys in CodexBar's config, …); the widget only reads what the CLI reports. Some newer providers need a recent CLI, which the widget tells you when a probe fails.
 </details>
