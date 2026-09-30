@@ -1,0 +1,35 @@
+name: Plasma smoke test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    steps:
+      - name: Install Plasma runtime
+        run: >-
+          pacman -Syu --noconfirm
+          git plasma-sdk libplasma plasma5support kirigami kcmutils ksvg
+          breeze breeze-icons noto-fonts xorg-server-xvfb imagemagick
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Render the widget against a mock CodexBar CLI
+        run: dbus-run-session -- bash tests/smoke/run.sh "$PWD/dist/smoke"
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plasma-smoke-${{ github.sha }}
+          path: dist/smoke/
+          if-no-files-found: warn
