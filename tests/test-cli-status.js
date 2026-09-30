@@ -74,4 +74,10 @@ const staleResult = cli.applyUsageResult(
 assert.equal(staleResult, current)
 assert.equal(staleResult.code, cli.CHECKING)
 
+// config.json becomes the provider source from CLI 0.66 on (#25)
+assert.equal(cli.supportsConfigSource("0.66.0"), true)
+assert.equal(cli.supportsConfigSource("0.70.1"), true)
+assert.equal(cli.supportsConfigSource("0.65.9"), false)
+assert.equal(cli.supportsConfigSource(""), false)
+
 console.log("CLI status tests passed")

@@ -99,8 +99,17 @@ var PROVIDERS = {
 // Providers whose local logs the `codexbar cost` command can price.
 var COST_PROVIDERS = ["claude", "codex"]
 
+// Display names of providers the catalog does not know, such as user plugins
+// listed in CodexBar's config.json.
+var EXTRA_NAMES = {}
+
+function registerName(id, name) {
+    if (PROVIDERS[id] === undefined && typeof name === "string" && name !== "")
+        EXTRA_NAMES[id] = name
+}
+
 function meta(id) {
-    return PROVIDERS[id] || { name: id, color: "#888888", dashboard: "", status: "", icon: "" }
+    return PROVIDERS[id] || { name: EXTRA_NAMES[id] || id, color: "#888888", dashboard: "", status: "", icon: "" }
 }
 
 // A fully colored logo brings its own color and disappears on a chip in the
@@ -131,6 +140,15 @@ var REPORTED_PROVIDER_IDS = {
 
 function reportedProviderId(id) {
     return REPORTED_PROVIDER_IDS[id] || id
+}
+
+// The --provider name for an id the CLI reports.
+function cliProviderId(reported) {
+    for (var id in REPORTED_PROVIDER_IDS) {
+        if (REPORTED_PROVIDER_IDS[id] === reported)
+            return id
+    }
+    return reported
 }
 
 // The CLI does not reject a --provider name it does not know (a provider

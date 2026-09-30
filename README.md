@@ -147,10 +147,19 @@ Cost scanning is off by default because large local histories can be resource-in
 </details>
 
 <details>
+<summary><b>Providers and CodexBar's config.json</b></summary>
+<br>
+
+With CodexBar CLI 0.66 or newer, the provider list and which providers are enabled come from CodexBar's own `~/.config/codexbar/config.json`, which the CLI and the macOS app share. Providers enabled with `codexbar config enable` show up in the widget, providers from user plugins included, and ticking a provider on the **Providers** page writes the change back with `codexbar config enable` / `disable` when you click **Apply**. The first start with such a CLI copies the widget's previous selection into config.json once. Older CLIs keep the widget's own list.
+
+Each provider is still probed in its own `codexbar usage --provider …` process: the CLI fetches providers one after another when asked for all of them, so separate processes keep refreshes fast and one slow provider from holding up the rest.
+</details>
+
+<details>
 <summary><b>Per-provider data source and CLI environment</b></summary>
 <br>
 
-**Source.** Some providers have several CodexBar data sources with different speed and credential needs (for example OpenCode Go: the automatic local-database scan versus the API with `OPENCODE_API_KEY`). The **Providers** settings page has a source column per provider (Auto, Web, CLI, OAuth, API) that is passed to the CLI as `--source`. Auto leaves the decision to the CLI. See the CodexBar CLI documentation for what each provider supports.
+**Source.** Some providers have several CodexBar data sources with different speed and credential needs (for example OpenCode Go: the automatic local-database scan versus the API with `OPENCODE_API_KEY`). The **Providers** settings page has a source column per provider (Auto, Web, CLI, OAuth, API) that is passed to the CLI as `--source`. Auto leaves the decision to the CLI; with config.json in use, the first choice shows the source stored there and the others override it for the widget only. See the CodexBar CLI documentation for what each provider supports.
 
 **Environment.** Plasma does not pass your interactive shell environment to widgets. Set **CLI environment file** in the General settings to a file with `KEY=VALUE` lines (for example `~/.config/codexbar/widget.env`, `chmod 600`; quote values that contain spaces, the file is read like a shell `EnvironmentFile`). The widget exports those variables only into the `codexbar` process it starts, so API keys never have to be stored in Plasma's applet configuration. A missing file is ignored. Anything CodexBar itself can read from `~/.config/codexbar/config.json` works there as well.
 </details>

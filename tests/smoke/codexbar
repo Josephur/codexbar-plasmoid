@@ -1,7 +1,11 @@
 #!/bin/sh
 # Stand-in for the CodexBar CLI in the Plasma smoke test. Prints the recorded
-# payloads in $CODEXBAR_FIXTURES with reset times relative to now.
+# payloads in $CODEXBAR_FIXTURES with reset times relative to now, and keeps
+# the enabled providers of its config.json in $CODEXBAR_MOCK_STATE (one
+# CodexBar id per line; missing means only the default-enabled Codex).
 fixtures="${CODEXBAR_FIXTURES:?CODEXBAR_FIXTURES is not set}"
+state="${CODEXBAR_MOCK_STATE:?CODEXBAR_MOCK_STATE is not set}"
+providers="$fixtures/providers.txt"
 
 iso() { date -u -d "$1" +%Y-%m-%dT%H:%M:%SZ; }
 
@@ -18,9 +22,54 @@ serve() {
         "$fixtures/$1"
 }
 
+enabled_ids() {
+    if [ -f "$state" ]; then cat "$state"; else echo codex; fi
+}
+
+# CodexBar id for a --provider name or id, empty when unknown.
+provider_id() {
+    awk -v name="$1" '$1 == name || $2 == name { print $1; exit }' "$providers"
+}
+
+config_command() {
+    case "$1" in
+        providers)
+            enabled_ids | awk 'NR == FNR { on[$1] = 1; next }
+                { name = $3; for (i = 4; i <= NF; i++) name = name " " $i
+                  printf "%s{\"displayName\":\"%s\",\"enabled\":%s,\"provider\":\"%s\",\"defaultEnabled\":%s}",
+                      (n++ ? "," : "["), name, ($1 in on) ? "true" : "false", $1, ($1 == "codex") ? "true" : "false" }
+                END { print "]" }' - "$providers"
+            ;;
+        dump)
+            enabled_ids | awk 'NR == FNR { on[$1] = 1; next }
+                { printf "%s{\"id\":\"%s\",\"enabled\":%s%s}", (n++ ? "," : "{\"providers\":["), $1,
+                      ($1 in on) ? "true" : "false", ($1 == "claude") ? ",\"source\":\"oauth\"" : "" }
+                END { print "]}" }' - "$providers"
+            ;;
+        enable | disable)
+            id="$(provider_id "$3")"
+            if [ -z "$id" ]; then
+                echo '[{"provider":"cli","error":{"code":1,"message":"Unknown or missing provider."}}]'
+                exit 1
+            fi
+            current="$(enabled_ids | grep -v -x -F "$id")"
+            if [ "$1" = enable ]; then
+                printf '%s\n%s\n' "$current" "$id" | sed '/^$/d' >"$state"
+            else
+                printf '%s\n' "$current" | sed '/^$/d' >"$state"
+            fi
+            echo "{\"provider\":\"$id\",\"enabled\":$([ "$1" = enable ] && echo true || echo false)}"
+            ;;
+        *)
+            echo "mock codexbar: unsupported config command: $*" >&2
+            exit 2
+            ;;
+    esac
+}
+
 case "${1:-}" in
     --version | -V)
-        echo "CodexBar 0.70.0"
+        echo "CodexBar ${CODEXBAR_MOCK_VERSION:-0.70.0}"
         ;;
     usage)
         provider=""
@@ -37,6 +86,10 @@ case "${1:-}" in
             # enabled in its own config instead of failing.
             serve "usage-codex.json"
         fi
+        ;;
+    config)
+        shift
+        config_command "$@"
         ;;
     cost)
         echo "[]"

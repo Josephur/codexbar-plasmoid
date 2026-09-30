@@ -20,8 +20,9 @@ QQC2.Dialog {
     //   launchCommand }
     property var globals: ({})
 
-    // Provider id being edited.
+    // Provider id being edited, and its display name.
     property string providerId: ""
+    property string providerName: ""
     // Working state while open: key -> { custom: bool, value: var }.
     property var rows: ({})
 
@@ -36,11 +37,12 @@ QQC2.Dialog {
     modal: true
     title: providerId === ""
         ? i18n("Provider settings")
-        : i18n("Settings for %1", Catalog.meta(providerId).name)
+        : i18n("Settings for %1", providerName !== "" ? providerName : Catalog.meta(providerId).name)
 
     // Fill the working state (overrides where set, globals elsewhere) and open.
-    function openFor(id) {
+    function openFor(id, name) {
         dialog.providerId = id
+        dialog.providerName = typeof name === "string" ? name : ""
         dialog.loadRows()
         dialog.open()
     }

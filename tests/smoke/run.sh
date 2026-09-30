@@ -18,7 +18,7 @@ mkdir -p "$HOME/.local/bin" "$XDG_CONFIG_HOME" "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 # The widget puts ~/.local/bin first on the CLI's PATH.
 ln -s "$repo/tests/smoke/codexbar" "$HOME/.local/bin/codexbar"
-export CODEXBAR_FIXTURES="$repo/tests/smoke/fixtures"
+export CODEXBAR_FIXTURES="$repo/tests/smoke/fixtures" CODEXBAR_MOCK_STATE="$work/mock-config"
 
 export DISPLAY=:99 QT_QPA_PLATFORM=xcb
 Xvfb "$DISPLAY" -screen 0 1280x900x24 -nolisten tcp &
@@ -48,10 +48,25 @@ package() {
     echo "$dir"
 }
 
-# render NAME PACKAGE WIDTHxHEIGHT [plasmoidviewer options...]
+failed=0
+
+# expect_config ID... checks that the mock config.json enables exactly these.
+expect_config() {
+    local want have
+    want="$(printf '%s\n' "$@" | sort | tr '\n' ' ')"
+    have="$({ cat "$CODEXBAR_MOCK_STATE" 2>/dev/null || echo codex; } | sort | tr '\n' ' ')"
+    if [[ "$want" != "$have" ]]; then
+        echo "config.json enables [$have], expected [$want]" >&2
+        failed=1
+    fi
+}
+
+# render NAME PACKAGE WIDTHxHEIGHT [plasmoidviewer options...]; every run
+# starts from a fresh config.json where only Codex is enabled.
 render() {
     local name="$1" pkg="$2" size="$3"
     shift 3
+    rm -f "$CODEXBAR_MOCK_STATE"
     plasmoidviewer -a "$pkg" -s "$size" "$@" >"$out/$name.log" 2>&1 &
     local pid=$!
     sleep "${SMOKE_WAIT:-15}"
@@ -66,6 +81,8 @@ three="enabledProviders=codex,claude,antigravity"
 panel=(-c org.kde.panel -f horizontal -l topedge)
 render panel-meters "$(package meters "$three" showPercentInPanel=true panelPercentSource=lowest)" \
     640x140 "${panel[@]}"
+# The widget's own list moved to config.json on first start (#25).
+expect_config codex claude antigravity
 render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentInPanel=true)" \
     640x140 "${panel[@]}"
 render panel-override "$(package override "$three" showPercentInPanel=true \
@@ -76,9 +93,17 @@ render panel-vertical "$(package vertical "$three" showPercentInPanel=true showR
     separateIcons=true)" 160x520 -c org.kde.panel -f vertical -l leftedge
 render popup "$(package popup "$three")" 560x860 -f planar
 render popup-used "$(package popup-used "$three" usageBarsShowUsed=true)" 560x860 -f planar
+# A provider only config.json knows, such as a user plugin, still shows up.
+render popup-plugin "$(package plugin enabledProviders=codex,myplugin)" 560x860 -f planar
+expect_config codex myplugin
+# CLIs before 0.66 keep the widget's own list and leave config.json alone.
+export CODEXBAR_MOCK_VERSION=0.65.0
+render panel-legacy "$(package legacy "$three" panelDisplayMode=logos showPercentInPanel=true)" \
+    640x140 "${panel[@]}"
+unset CODEXBAR_MOCK_VERSION
+expect_config codex
 
 # Middle and double click on the merged meter run the configured command.
-failed=0
 marker="$work/clicked"
 plasmoidviewer -a "$(package clicks "$three" middleClickAction=command doubleClickAction=command \
     "launchCommand=touch $marker")" -s 640x140 "${panel[@]}" >"$out/clicks.log" 2>&1 &

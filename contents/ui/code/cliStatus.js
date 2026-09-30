@@ -1,6 +1,9 @@
 // Shared CodexBar CLI compatibility and probe state.
 // Keep the minimum supported version in this file only.
 var MINIMUM_VERSION = "0.43.0"
+// From this release on the widget reads and writes the provider list in
+// CodexBar's config.json; older CLI config writes dropped plugin settings.
+var CONFIG_SOURCE_VERSION = "0.66.0"
 
 var UNKNOWN = "unknown"
 var CHECKING = "checking"
@@ -178,6 +181,11 @@ function applyUsageResult(state, generation, exitCode, hasUsage, parseFailed) {
     if (next.code === INCOMPATIBLE)
         next.reason = REASON_CRASHED
     return next
+}
+
+function supportsConfigSource(version) {
+    var order = compareVersions(version, CONFIG_SOURCE_VERSION)
+    return order !== null && order >= 0
 }
 
 function isSetupRequired(code) {

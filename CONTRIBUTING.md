@@ -16,7 +16,7 @@ The CLI reads `~/.config/codexbar/config.json`, and the macOS app writes the sam
 | token accounts | click and launch actions |
 | hooks | refresh interval |
 
-`enabledProviders` and `providerSources` predate the rule; moving them to `config.json` is tracked in [#25](https://github.com/psimaker/codexbar-plasmoid/issues/25). Please do not add new fetch-side keys to the plasmoid.
+Since [#25](https://github.com/psimaker/codexbar-plasmoid/issues/25) the provider list and enabled state come from `config.json` (CLI 0.66 or newer): `enabledProviders` only mirrors it for the settings page, and the widget writes changes back with `codexbar config enable|disable`. `providerSources` stays a per-probe `--source` override until upstream can set a provider's source ([steipete/CodexBar#4142](https://github.com/steipete/CodexBar/issues/4142)). Please do not add new fetch-side keys to the plasmoid.
 
 Requests for new providers, data sources, credentials or fetch behavior belong upstream in [steipete/CodexBar](https://github.com/steipete/CodexBar/issues). The widget only renders what the CLI reports.
 
