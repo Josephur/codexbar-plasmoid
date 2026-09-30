@@ -40,7 +40,7 @@ Options: `--widget-only`, `--cli-only`, `--version v0.5.0`. The scripts are plai
 
 ## ✨ Features
 
-- **Panel icon in the original look.** Two meter capsules (session on top, weekly below), fill = remaining quota, dimmed when data is stale. One merged icon showing the worst case across providers by default, or one icon per provider with the original "critter" faces for Codex and Claude. Optional percentage label, or provider logos instead of meters. **Usage bars fill** in the General settings switches every meter and bar between remaining quota (default, as in CodexBar) and used quota.
+- **Panel icon in the original look.** Two meter capsules (session on top, weekly below), fill = remaining quota, dimmed when data is stale. One merged icon showing the worst case across providers by default, or one icon per provider with the original "critter" faces for Codex and Claude. Optional percentage label, or provider logos instead of meters. **Usage bars fill** in the General settings switches every meter and bar between remaining quota (default, as in CodexBar) and used quota. Per-provider overrides let single providers look different from the rest.
 - **Popup like the original menu.** Provider switcher tabs with brand-colored quota bars, an overview page, and per provider: session / weekly / extra rate windows ("Codex Spark", model-scoped weekly caps, …) with progress bars, reset countdowns and a pace line, Codex reset credits, local cost (today / last 30 days via `codexbar cost`), provider status, account info, and the CLI's detail rows (balances, monthly spend, credit pools, …).
 - **Actions.** Refresh, cost-history refresh, Usage Dashboard, Status Page, Settings, About.
 - **87 providers.** Everything the CodexBar CLI supports, enable only what you use.
@@ -153,6 +153,19 @@ Cost scanning is off by default because large local histories can be resource-in
 **Source.** Some providers have several CodexBar data sources with different speed and credential needs (for example OpenCode Go: the automatic local-database scan versus the API with `OPENCODE_API_KEY`). The **Providers** settings page has a source column per provider (Auto, Web, CLI, OAuth, API) that is passed to the CLI as `--source`. Auto leaves the decision to the CLI. See the CodexBar CLI documentation for what each provider supports.
 
 **Environment.** Plasma does not pass your interactive shell environment to widgets. Set **CLI environment file** in the General settings to a file with `KEY=VALUE` lines (for example `~/.config/codexbar/widget.env`, `chmod 600`; quote values that contain spaces, the file is read like a shell `EnvironmentFile`). The widget exports those variables only into the `codexbar` process it starts, so API keys never have to be stored in Plasma's applet configuration. A missing file is ignored. Anything CodexBar itself can read from `~/.config/codexbar/config.json` works there as well.
+</details>
+
+<details>
+<summary><b>Per-provider panel overrides</b></summary>
+<br>
+
+**Overrides.** The settings button next to a provider on the **Providers** settings page opens its panel overrides: panel display mode, percentage visibility / window / style, and critters. Tick a row to override the General setting for that provider only; unticked rows keep following the General page, so later changes there still reach every provider that has not overridden them. Percentage window and style can only be ticked while the percentage is shown for that provider. Only ticked rows are stored, as JSON in the `providerOverrides` key. Like every other setting, nothing is saved until you click **Apply** or **OK** on the settings page.
+
+**Resetting.** A provider with overrides has a highlighted settings button. **Reset to global** in its dialog unticks every row; click **OK** to keep that, or **Cancel** to leave the provider as it was.
+
+**Panel layout.** In the default merged-meter layout, a provider with any ticked override gets its own icon next to the merged meter, even when the value matches the General page, and the merged meter only aggregates the providers that still follow the defaults. With provider logos or one meter per provider, every provider already has its own icon and simply uses its own settings. Clicking a provider's icon opens its page in the popup; clicking the merged meter opens or closes the popup on the page you viewed last.
+
+**Finding providers.** **Show enabled only** next to the search field hides providers you have not enabled. While it is on and you search, a hint below the list offers to show all providers.
 </details>
 
 <details>

@@ -41,6 +41,10 @@ Plasma keeps the loaded QML until it restarts (`systemctl --user restart plasma-
 
 Logic that does not need QML lives in `contents/ui/code/*.js` and is tested with Node in `tests/`. Keep new helpers there so they stay testable.
 
+### Adding a per-provider override
+
+Display settings that a provider can override live in `contents/ui/code/providerOverrides.js`: add a `DEFINITIONS` entry (section, control, valid values), list the key in `SETTING_KEYS` (dialog order; unlisted keys are dropped on read) and add an `effective…` helper. The dialog builds its rows from that table; the translated label, option names and "Global: …" hint go in `contents/ui/ProviderOverridesDialog.qml`, the global value is passed in from `configProviders.qml`, and `CompactBar.qml` reads it per icon through a matching `…For(pid)` function. Any ticked override gives the provider its own panel icon.
+
 ### Syncing providers with upstream
 
 A daily workflow (`.github/workflows/upstream-check.yml`) compares the pinned list with the latest CodexBar CLI release and opens an issue labelled `upstream-sync` when providers were added or removed. `DRY_RUN=1 scripts/check-upstream-providers.sh` runs the same check locally.

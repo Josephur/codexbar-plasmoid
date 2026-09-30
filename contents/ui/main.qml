@@ -743,6 +743,11 @@ PlasmoidItem {
             if (root.componentReady)
                 root.refreshAll(true)
         }
+        function onProviderOverridesChanged() {
+            // Overrides only change how the panel draws; no re-probe needed.
+            if (root.componentReady)
+                root.bump()
+        }
     }
 
     onCliEnvironmentFileChanged: {

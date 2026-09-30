@@ -68,6 +68,8 @@ render panel-meters "$(package meters "$three" showPercentInPanel=true panelPerc
     640x140 "${panel[@]}"
 render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentInPanel=true)" \
     640x140 "${panel[@]}"
+render panel-override "$(package override "$three" showPercentInPanel=true \
+    'providerOverrides={"claude":{"panelDisplayMode":"logos"}}')" 640x140 "${panel[@]}"
 render popup "$(package popup "$three")" 560x860 -f planar
 render popup-used "$(package popup-used "$three" usageBarsShowUsed=true)" 560x860 -f planar
 
