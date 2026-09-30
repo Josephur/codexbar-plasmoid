@@ -1,0 +1,1 @@
+[{"provider":"codex","source":"oauth","status":{"indicator":"none","description":"All Systems Operational"},"usage":{"primary":{"usedPercent":35,"windowMinutes":300,"resetsAt":"@IN_3H50M@"},"secondary":{"usedPercent":62,"windowMinutes":10080,"resetsAt":"@IN_4D@"},"updatedAt":"@NOW@","identity":{"accountEmail":"demo@example.com","loginMethod":"pro"}}}]
