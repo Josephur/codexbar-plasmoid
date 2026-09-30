@@ -471,6 +471,17 @@ PlasmoidItem {
         return i18n("No usage data — check CodexBar login/configuration (exit %1)", exitCode)
     }
 
+    // The CLI answered for other providers only, so it does not know this
+    // one: the provider is newer than the installed CLI or was removed.
+    function unsupportedProviderText(p) {
+        var required = Catalog.meta(p).minCli
+        if (required && cliState.detectedVersion !== ""
+                && CliStatus.compareVersions(cliState.detectedVersion, required) < 0)
+            return i18n("%1 needs CodexBar CLI %2 or newer (installed: %3)",
+                        Catalog.meta(p).name, required, cliState.detectedVersion)
+        return i18n("%1 is not supported by the installed CodexBar CLI", Catalog.meta(p).name)
+    }
+
     function handleData(source, exitCode, stdout) {
         var cliCheck = pendingCliChecks[source]
         if (cliCheck !== undefined) {
@@ -572,13 +583,22 @@ PlasmoidItem {
             if (trimmed.length > 0) {
                 try { parsed = JSON.parse(trimmed) } catch (e) { parseFailed = true }
             }
-            if (parsed && parsed.length > 0 && parsed[0].usage) {
-                d.entry = parsed[0]
-                d.entries = parsed
+            // An unknown --provider name makes the CLI report the providers
+            // enabled in its own config; only this provider's entries count.
+            var entries = Catalog.entriesForProvider(parsed, req.p)
+            if (entries.length > 0 && entries[0].usage) {
+                d.entry = entries[0]
+                d.entries = entries
                 d.error = ""
                 d.errorCode = ""
                 cliState = CliStatus.applyUsageResult(
                     cliState, req.cliGeneration, exitCode, true, false)
+            } else if (entries.length === 0 && Array.isArray(parsed) && parsed.length > 0) {
+                // The CLI itself works, so its state stays as it is.
+                delete d.entry
+                delete d.entries
+                d.error = unsupportedProviderText(req.p)
+                d.errorCode = ""
             } else {
                 d.error = usageErrorText(req.p, exitCode, parseFailed)
                 d.errorCode = CliStatus.usageFailureCode(exitCode, parseFailed)
