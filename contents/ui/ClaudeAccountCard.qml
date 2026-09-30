@@ -178,7 +178,7 @@ ColumnLayout {
 
             UsageBar {
                 Layout.fillWidth: true
-                percent: Catalog.windowBarPercent(section.modelData.win)
+                percent: Catalog.windowBarFill(section.modelData.win, Plasmoid.configuration.usageBarsShowUsed)
                 fillColor: card.brandColor
             }
 
@@ -186,9 +186,9 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 PlasmaComponents3.Label {
-                    text: Plasmoid.configuration.fillMetersAsUsed
-                          ? Catalog.windowRemainingText(section.modelData.win) + i18n("% left")
-                          : Catalog.windowUsedText(section.modelData.win) + i18n("% used")
+                    text: Plasmoid.configuration.usageBarsShowUsed
+                          ? Catalog.windowUsedText(section.modelData.win) + i18n("% used")
+                          : Catalog.windowRemainingText(section.modelData.win) + i18n("% left")
                     opacity: 0.75
                     font: Kirigami.Theme.smallFont
                 }

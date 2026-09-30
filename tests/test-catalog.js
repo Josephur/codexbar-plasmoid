@@ -121,10 +121,16 @@ assert.equal(catalog.namedWindow(antigravity.extraRateWindows[1]).usedPercent, 6
 assert.equal(catalog.namedWindow({ id: "x", window: { isSyntheticPlaceholder: true } }), null)
 assert.equal(catalog.namedWindow(null), null)
 
-console.log("Catalog tests passed")
-
+// "Usage bars fill": remaining by default, used on request; unknown stays empty
 assert.equal(catalog.windowUsedText({ usedPercent: 37.4 }), "37")
 assert.equal(catalog.windowRemainingText({ usedPercent: 37.4 }), "63")
 assert.equal(catalog.windowRemainingText({ usedPercent: 120 }), "0")
 assert.equal(catalog.windowRemainingText({ usageKnown: false, usedPercent: 5 }), "–")
 assert.equal(catalog.windowRemainingText(null), "–")
+assert.equal(catalog.windowBarFill({ usedPercent: 37.4 }, false), 63)
+assert.equal(catalog.windowBarFill({ usedPercent: 37.4 }, true), 37)
+assert.equal(catalog.windowBarFill({ usedPercent: 120 }, false), 0)
+assert.equal(catalog.windowBarFill({ usageKnown: false, usedPercent: 5 }, false), 0)
+assert.equal(catalog.windowBarFill(null, true), 0)
+
+console.log("Catalog tests passed")

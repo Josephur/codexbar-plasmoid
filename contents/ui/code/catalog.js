@@ -322,6 +322,15 @@ function windowBarPercent(w) {
     return windowUsageKnown(w) ? normalizedPercent(w.usedPercent) : 0
 }
 
+// Bar fill under CodexBar's "Usage bars fill" preference (usageBarsShowUsed):
+// remaining quota by default, used quota when showUsed is set.
+function windowBarFill(w, showUsed) {
+    if (!windowUsageKnown(w))
+        return 0
+    var used = normalizedPercent(w.usedPercent)
+    return showUsed ? used : 100 - used
+}
+
 // Menu pace line, matching CodexBarCore UsagePace / UsagePaceText. Kimi does
 // not return the CLI's pre-computed `pace` payload, so reproduce that logic
 // from the weekly window without rounding the values used in the projection.

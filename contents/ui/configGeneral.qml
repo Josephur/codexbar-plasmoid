@@ -12,7 +12,7 @@ KCM.SimpleKCM {
     property alias cfg_separateIcons: separateIcons.checked
     property string cfg_panelDisplayMode
     property alias cfg_hideCritters: hideCritters.checked
-    property alias cfg_fillMetersAsUsed: fillMetersAsUsed.checked
+    property bool cfg_usageBarsShowUsed
     property alias cfg_showCost: showCost.checked
     property alias cfg_showStatus: showStatus.checked
     property alias cfg_cliPath: cliPath.text
@@ -29,6 +29,7 @@ KCM.SimpleKCM {
     onCfg_panelPercentSourceChanged: sourceCombo.sync()
     onCfg_percentStyleChanged: styleCombo.sync()
     onCfg_panelDisplayModeChanged: displayModeCombo.sync()
+    onCfg_usageBarsShowUsedChanged: usageBarsFillCombo.sync()
 
     Kirigami.FormLayout {
 
@@ -111,9 +112,15 @@ KCM.SimpleKCM {
             text: i18n("Hide critters (plain meter bars)")
         }
 
-        QQC2.CheckBox {
-            id: fillMetersAsUsed
-            text: i18n("Meters fill as quota is used, menu shows % left")
+        QQC2.ComboBox {
+            id: usageBarsFillCombo
+            Kirigami.FormData.label: i18n("Usage bars fill:")
+            model: [i18n("As remaining"), i18n("As used")]
+            function sync() {
+                currentIndex = page.cfg_usageBarsShowUsed ? 1 : 0
+            }
+            Component.onCompleted: sync()
+            onActivated: page.cfg_usageBarsShowUsed = currentIndex === 1
         }
 
         Item { Kirigami.FormData.isSection: true }

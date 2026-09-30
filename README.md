@@ -40,7 +40,7 @@ Options: `--widget-only`, `--cli-only`, `--version v0.5.0`. The scripts are plai
 
 ## ✨ Features
 
-- **Panel icon in the original look.** Two meter capsules (session on top, weekly below), fill = remaining quota, dimmed when data is stale. One merged icon showing the worst case across providers by default, or one icon per provider with the original "critter" faces for Codex and Claude. Optional percentage label, or provider logos instead of meters. A General setting can invert the meters so they fill as quota is used, with the menu showing the percentage left.
+- **Panel icon in the original look.** Two meter capsules (session on top, weekly below), fill = remaining quota, dimmed when data is stale. One merged icon showing the worst case across providers by default, or one icon per provider with the original "critter" faces for Codex and Claude. Optional percentage label, or provider logos instead of meters. **Usage bars fill** in the General settings switches every meter and bar between remaining quota (default, as in CodexBar) and used quota.
 - **Popup like the original menu.** Provider switcher tabs with brand-colored quota bars, an overview page, and per provider: session / weekly / extra rate windows ("Codex Spark", model-scoped weekly caps, …) with progress bars, reset countdowns and a pace line, Codex reset credits, local cost (today / last 30 days via `codexbar cost`), provider status, account info, and the CLI's detail rows (balances, monthly spend, credit pools, …).
 - **Actions.** Refresh, cost-history refresh, Usage Dashboard, Status Page, Settings, About.
 - **87 providers.** Everything the CodexBar CLI supports, enable only what you use.

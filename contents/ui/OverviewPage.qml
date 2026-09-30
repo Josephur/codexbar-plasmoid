@@ -101,7 +101,7 @@ ColumnLayout {
                         UsageBar {
                             Layout.fillWidth: true
                             implicitHeight: 4
-                            percent: Catalog.windowBarPercent(overviewRow.primaryWin)
+                            percent: Catalog.windowBarFill(overviewRow.primaryWin, Plasmoid.configuration.usageBarsShowUsed)
                             fillColor: overviewRow.meta.color
                             opacity: overviewRow.primaryWin ? 1 : 0.35
                         }
@@ -110,9 +110,9 @@ ColumnLayout {
                             text: {
                                 if (!overviewRow.primaryWin)
                                     return "–"
-                                if (Plasmoid.configuration.fillMetersAsUsed)
-                                    return Catalog.windowRemainingText(overviewRow.primaryWin) + i18n("% left")
-                                return Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
+                                if (Plasmoid.configuration.usageBarsShowUsed)
+                                    return Catalog.windowUsedText(overviewRow.primaryWin) + i18n("% used")
+                                return Catalog.windowRemainingText(overviewRow.primaryWin) + i18n("% left")
                             }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
@@ -129,7 +129,7 @@ ColumnLayout {
                         UsageBar {
                             Layout.fillWidth: true
                             implicitHeight: 4
-                            percent: Catalog.windowBarPercent(overviewRow.secondaryWin)
+                            percent: Catalog.windowBarFill(overviewRow.secondaryWin, Plasmoid.configuration.usageBarsShowUsed)
                             fillColor: overviewRow.meta.color
                             opacity: overviewRow.secondaryWin ? 0.75 : 0.35
                         }
@@ -138,9 +138,9 @@ ColumnLayout {
                             text: {
                                 if (!overviewRow.secondaryWin)
                                     return "–"
-                                if (Plasmoid.configuration.fillMetersAsUsed)
-                                    return Catalog.windowRemainingText(overviewRow.secondaryWin) + i18n("% left")
-                                return Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
+                                if (Plasmoid.configuration.usageBarsShowUsed)
+                                    return Catalog.windowUsedText(overviewRow.secondaryWin) + i18n("% used")
+                                return Catalog.windowRemainingText(overviewRow.secondaryWin) + i18n("% left")
                             }
                             opacity: 0.6
                             font: Kirigami.Theme.smallFont
