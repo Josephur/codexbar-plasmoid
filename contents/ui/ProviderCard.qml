@@ -175,7 +175,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents3.Label {
+        TruncatedLabel {
             text: card.meta.name
             font.weight: Font.Bold
             font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.25
@@ -261,7 +261,7 @@ ColumnLayout {
                 }
             }
 
-            PlasmaComponents3.Label {
+            TruncatedLabel {
                 visible: text !== ""
                 text: Catalog.paceLine(section.modelData.pace, section.modelData.win,
                                        section.modelData.minutes, plasmoidRoot.nowMs, providerId)
@@ -275,7 +275,7 @@ ColumnLayout {
         }
     }
 
-    PlasmaComponents3.Label {
+    TruncatedLabel {
         Layout.fillWidth: true
         visible: !card.extrasOnly && text !== ""
         text: card.providerCostLine()
@@ -320,7 +320,7 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
-                        PlasmaComponents3.Label {
+                        TruncatedLabel {
                             text: detailRow.modelData.label
                             opacity: 0.75
                             font: Kirigami.Theme.smallFont
@@ -328,7 +328,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                         }
 
-                        PlasmaComponents3.Label {
+                        TruncatedLabel {
                             text: detailRow.modelData.value
                             font: Kirigami.Theme.smallFont
                             horizontalAlignment: Text.AlignRight
@@ -468,7 +468,7 @@ ColumnLayout {
                    ? Catalog.statusColor(card.entry.status.indicator) : "transparent"
         }
 
-        PlasmaComponents3.Label {
+        TruncatedLabel {
             text: card.entry && card.entry.status && card.entry.status.description
                   ? card.entry.status.description : ""
             opacity: 0.6
@@ -478,7 +478,7 @@ ColumnLayout {
         }
     }
 
-    PlasmaComponents3.Label {
+    TruncatedLabel {
         visible: !card.extrasOnly && !!(card.usage && card.usage.identity
                                         && card.usage.identity.accountEmail !== undefined)
         text: card.usage && card.usage.identity && card.usage.identity.accountEmail
