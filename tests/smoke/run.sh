@@ -119,6 +119,38 @@ sleep 3
 kill "$clicks_pid" 2>/dev/null || true
 wait "$clicks_pid" 2>/dev/null || true
 
+# The settings window: the General and Providers pages, and the override
+# dialog of Claude, whose seeded override gives it a ticked row.
+rm -f "$CODEXBAR_MOCK_STATE"
+plasmoidviewer -a "$(package settings "$three" \
+    'providerOverrides={"claude":{"panelDisplayMode":"logos"}}')" -s 560x860 -f planar \
+    >"$out/settings.log" 2>&1 &
+settings_pid=$!
+sleep "${SMOKE_WAIT:-15}"
+# "Settings…" at the bottom of the popup opens the configuration window.
+xdotool mousemove 230 694 click 1
+sleep 5
+settings_window="$(xdotool search --name 'CodexBar Settings' | head -n 1)"
+if [[ -z "$settings_window" ]]; then
+    echo "The settings window did not open" >&2
+    failed=1
+else
+    xdotool windowsize "$settings_window" 1000 890
+    sleep 2
+    import -window "$settings_window" "$out/settings-general.png"
+    # The sidebar's second category is the Providers page.
+    xdotool mousemove 63 100 click 1
+    sleep 3
+    import -window "$settings_window" "$out/settings-providers.png"
+    # Claude's gear button (second row) opens its override dialog.
+    xdotool mousemove 980 204 click 1
+    sleep 3
+    import -window "$settings_window" "$out/settings-overrides.png"
+fi
+xwininfo -root -tree >"$out/settings.windows.txt" 2>&1 || true
+kill "$settings_pid" 2>/dev/null || true
+wait "$settings_pid" 2>/dev/null || true
+
 # QML runtime errors from the widget's own files fail the test, and so does
 # an applet or containment that could not be loaded at all.
 errors="$(grep -h -E 'contents/ui/.*(Error|Unable to assign|is not a function|Cannot read property|is not defined)|does not exist|Containment doesn.t exist' "$out"/*.log || true)"

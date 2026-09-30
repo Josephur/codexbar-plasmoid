@@ -29,6 +29,9 @@ KCM.SimpleKCM {
     readonly property var sourceValues: ["session", "weekly", "lowest"]
     readonly property var styleValues: ["remaining", "used"]
     readonly property var displayModeValues: ["meters", "logos", "logos-and-meters"]
+    // Kirigami.FormLayout sizes itself to its widest item; wrapping hints and
+    // path fields stay within this width instead of stretching the page.
+    readonly property real hintWidth: Kirigami.Units.gridUnit * 26
     readonly property var clickActionValues: ["none", "refresh", "dashboard", "status", "command"]
     readonly property var clickActionLabels: [i18n("Nothing"), i18n("Refresh"),
         i18n("Open usage dashboard"), i18n("Open status page"), i18n("Run command")]
@@ -167,10 +170,12 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Command:")
             placeholderText: i18n("e.g. konsole -e codex")
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
         }
 
         QQC2.Label {
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
             text: i18n("Used by \"Run command\". A provider's own icon follows its settings on the Providers page; on the merged meter, the dashboard and status page open for the provider it currently shows.")
             wrapMode: Text.WordWrap
             opacity: 0.7
@@ -187,6 +192,7 @@ KCM.SimpleKCM {
 
         QQC2.Label {
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
             text: i18n("Cost scans can use significant disk and memory resources. Automatic scans run at most once per hour; use the separate menu action for an immediate scan.")
             wrapMode: Text.WordWrap
             opacity: 0.7
@@ -205,6 +211,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("codexbar CLI path:")
             placeholderText: i18n("auto (codexbar in PATH)")
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
         }
 
         QQC2.TextField {
@@ -212,10 +219,12 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("CLI environment file:")
             placeholderText: i18n("optional, e.g. ~/.config/codexbar/widget.env")
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
         }
 
         QQC2.Label {
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
             text: i18n("KEY=VALUE lines exported only to the codexbar process, for provider API keys such as OPENCODE_API_KEY. Quote values that contain spaces. Keep the file readable by you alone (chmod 600). Plasma does not pass your shell environment to widgets.")
             wrapMode: Text.WordWrap
             opacity: 0.7
@@ -236,10 +245,12 @@ KCM.SimpleKCM {
             enabled: enableClaudeAccounts.checked
             placeholderText: i18n("auto (cswap in PATH)")
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
         }
 
         QQC2.Label {
             Layout.fillWidth: true
+            Layout.maximumWidth: page.hintWidth
             enabled: enableClaudeAccounts.checked
             text: i18n("The widget only runs --list --json and an explicitly selected --switch-to <slot> --json operation.")
             wrapMode: Text.WordWrap
