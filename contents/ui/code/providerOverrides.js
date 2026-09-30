@@ -9,17 +9,18 @@
 // DEFINITIONS describes each overridable setting (section, control kind and
 // valid values) and the dialog builds its rows from it; SETTING_KEYS lists
 // the keys in dialog order and is what parsing keeps, so a new setting needs
-// both. Labels stay in QML so they can be translated.
+// both. Labels stay in QML so they can be translated. The helpers take either
+// the stored string or a map from parse(), so a caller can parse once.
 .pragma library
 
 var SECTIONS = ["appearance", "percentage", "critters"]
 
 var DEFINITIONS = {
-    panelDisplayMode: { section: "appearance", control: "enum", values: ["meters", "logos", "logos-and-meters"], perProvider: true },
-    showPercentInPanel: { section: "appearance", control: "bool", perProvider: true },
-    panelPercentSource: { section: "percentage", control: "enum", values: ["session", "weekly", "lowest"], requires: "showPercentInPanel", perProvider: true },
-    percentStyle: { section: "percentage", control: "enum", values: ["remaining", "used"], requires: "showPercentInPanel", perProvider: true },
-    hideCritters: { section: "critters", control: "bool", perProvider: true }
+    panelDisplayMode: { section: "appearance", control: "enum", values: ["meters", "logos", "logos-and-meters"] },
+    showPercentInPanel: { section: "appearance", control: "bool" },
+    panelPercentSource: { section: "percentage", control: "enum", values: ["session", "weekly", "lowest"], requires: "showPercentInPanel" },
+    percentStyle: { section: "percentage", control: "enum", values: ["remaining", "used"], requires: "showPercentInPanel" },
+    hideCritters: { section: "critters", control: "bool" }
 }
 
 // Dialog order: section order, then key order within each section.
@@ -41,23 +42,10 @@ function defFor(key) {
     return DEFINITIONS[key]
 }
 
-function perProviderKeys() {
-    var out = []
-    for (var i = 0; i < SETTING_KEYS.length; i++) {
-        if (DEFINITIONS[SETTING_KEYS[i]].perProvider === true)
-            out.push(SETTING_KEYS[i])
-    }
-    return out
-}
-
 function keysForSection(section) {
-    var out = []
-    var keys = perProviderKeys()
-    for (var i = 0; i < keys.length; i++) {
-        if (DEFINITIONS[keys[i]].section === section)
-            out.push(keys[i])
-    }
-    return out
+    return SETTING_KEYS.filter(function (key) {
+        return DEFINITIONS[key].section === section
+    })
 }
 
 function isValidDisplayMode(value) {
@@ -70,10 +58,6 @@ function isValidPercentSource(value) {
 
 function isValidPercentStyle(value) {
     return isValidValue("percentStyle", value)
-}
-
-function isKnownKey(key) {
-    return defFor(key) !== null
 }
 
 function isValidValue(key, value) {
@@ -139,7 +123,7 @@ function serialize(map) {
 
 // Override object for one provider ({} when it follows all globals).
 function settingsFor(raw, id) {
-    var map = parse(raw)
+    var map = raw !== null && typeof raw === "object" ? raw : parse(raw)
     if (typeof id !== "string" || map[id] === undefined)
         return {}
     return map[id]
@@ -147,44 +131,6 @@ function settingsFor(raw, id) {
 
 function hasOverride(raw, id) {
     return Object.keys(settingsFor(raw, id)).length > 0
-}
-
-// Provider ids that have at least one override, in the given display order;
-// ids missing from that order (e.g. dropped from the catalog) follow, sorted.
-function overriddenProviders(raw, order) {
-    var ids = Object.keys(parse(raw))
-    var known = Array.isArray(order) ? order : []
-    var out = []
-    for (var i = 0; i < known.length; i++) {
-        if (ids.indexOf(known[i]) >= 0)
-            out.push(known[i])
-    }
-    var rest = ids.filter(function (id) { return out.indexOf(id) < 0 }).sort()
-    return out.concat(rest)
-}
-
-function overriddenKeys(raw, id) {
-    return Object.keys(settingsFor(raw, id))
-}
-
-// Set one key; null/undefined/"" clears it back to "use global". Unknown keys
-// and invalid values leave the stored string unchanged.
-function withSetting(raw, id, key, value) {
-    var map = parse(raw)
-    if (typeof id !== "string" || id.length === 0 || !isKnownKey(key))
-        return serialize(map)
-    var entry = map[id] !== undefined ? map[id] : {}
-    if (value === null || value === undefined || value === "")
-        delete entry[key]
-    else if (isValidValue(key, value))
-        entry[key] = value
-    else
-        return serialize(map)
-    if (Object.keys(entry).length === 0)
-        delete map[id]
-    else
-        map[id] = entry
-    return serialize(map)
 }
 
 // Set several keys at once; unknown keys are ignored, nullish values clear.
@@ -268,20 +214,11 @@ function normalizeDisplayMode(mode) {
     return isValidDisplayMode(mode) ? mode : DEFAULT_DISPLAY_MODE
 }
 
-// Overrides that change how a provider is drawn on the panel.
-var PANEL_KEYS = ["panelDisplayMode", "showPercentInPanel", "panelPercentSource",
-                  "percentStyle", "hideCritters"]
-
-// True when a provider has any ticked panel override. Ticking one means "draw
-// this provider on its own", even when the value matches the global setting,
-// so it can leave the merged meter.
+// True when a provider has any ticked override. Ticking one means "draw this
+// provider on its own", even when the value matches the global setting, so it
+// can leave the merged meter.
 function needsOwnIcon(raw, id) {
-    var entry = settingsFor(raw, id)
-    for (var i = 0; i < PANEL_KEYS.length; i++) {
-        if (entry[PANEL_KEYS[i]] !== undefined)
-            return true
-    }
-    return false
+    return Object.keys(settingsFor(raw, id)).length > 0
 }
 
 // Panel icons for the enabled providers. Per-provider layouts (logo modes or

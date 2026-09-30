@@ -28,8 +28,10 @@ MouseArea {
                                                 || displayMode === "logos-and-meters"
     // Providers following the global panel settings share the merged meter;
     // only providers whose overrides differ get an icon of their own.
+    // Parsed once per change; the per-icon lookups below reuse it.
+    readonly property var overrides: ProviderOverrides.parse(Plasmoid.configuration.providerOverrides || "")
     readonly property var panelLayout: ProviderOverrides.panelIconModel(
-        Plasmoid.configuration.providerOverrides || "",
+        overrides,
         plasmoidRoot.enabledProviders, {
             panelDisplayMode: configuredDisplayMode,
             showPercentInPanel: Plasmoid.configuration.showPercentInPanel,
@@ -85,7 +87,7 @@ MouseArea {
         if (pid === "__merged__")
             return displayMode
         return ProviderOverrides.effectiveDisplayMode(
-            Plasmoid.configuration.providerOverrides, pid, configuredDisplayMode)
+            compactRoot.overrides, pid, configuredDisplayMode)
     }
 
     function showsLogosFor(pid) {
@@ -102,7 +104,7 @@ MouseArea {
         if (pid === "__merged__")
             return Plasmoid.configuration.showPercentInPanel
         return ProviderOverrides.effectiveShowPercent(
-            Plasmoid.configuration.providerOverrides, pid,
+            compactRoot.overrides, pid,
             Plasmoid.configuration.showPercentInPanel)
     }
 
@@ -110,7 +112,7 @@ MouseArea {
         if (pid === "__merged__")
             return Plasmoid.configuration.panelPercentSource
         return ProviderOverrides.effectivePercentSource(
-            Plasmoid.configuration.providerOverrides, pid,
+            compactRoot.overrides, pid,
             Plasmoid.configuration.panelPercentSource)
     }
 
@@ -118,7 +120,7 @@ MouseArea {
         if (pid === "__merged__")
             return Plasmoid.configuration.percentStyle
         return ProviderOverrides.effectivePercentStyle(
-            Plasmoid.configuration.providerOverrides, pid,
+            compactRoot.overrides, pid,
             Plasmoid.configuration.percentStyle)
     }
 
@@ -126,7 +128,7 @@ MouseArea {
         if (pid === "__merged__")
             return Plasmoid.configuration.hideCritters
         return ProviderOverrides.effectiveHideCritters(
-            Plasmoid.configuration.providerOverrides, pid,
+            compactRoot.overrides, pid,
             Plasmoid.configuration.hideCritters)
     }
 
@@ -143,14 +145,10 @@ MouseArea {
     }
 
     onClicked: function (mouse) {
-        // a provider's own icon opens its tab; the merged meter closes an
-        // open popup, else opens it on the overview (or the only provider's
-        // tab when just one is enabled)
+        // a provider's own icon opens its tab; the merged meter toggles the
+        // popup on the last viewed tab
         var target = providerAt(mouse.x, mouse.y)
-        if (target === "__merged__") {
-            if (!plasmoidRoot.expanded && plasmoidRoot.enabledProviders.length > 0)
-                plasmoidRoot.currentTab = plasmoidRoot.defaultTab()
-        } else if (target !== "") {
+        if (target !== "" && target !== "__merged__") {
             var switchingTab = plasmoidRoot.expanded
                     && plasmoidRoot.currentTab !== target
             plasmoidRoot.currentTab = target

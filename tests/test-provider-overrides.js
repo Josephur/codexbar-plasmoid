@@ -44,27 +44,12 @@ assert.deepEqual(plain(lib.settingsFor('{"codex":{"hideCritters":true}}', "codex
 assert.deepEqual(plain(lib.settingsFor('{"codex":{"hideCritters":true}}', "claude")), {})
 assert.equal(lib.hasOverride('{"codex":{"hideCritters":true}}', "codex"), true)
 assert.equal(lib.hasOverride('{"codex":{"hideCritters":true}}', "claude"), false)
-assert.deepEqual(plain(lib.overriddenKeys('{"codex":{"hideCritters":true}}', "codex")),
-    ["hideCritters"])
 
-// providers with overrides, in display order, unknown ids last
-assert.deepEqual(plain(lib.overriddenProviders("{}", ["codex", "claude"])), [])
-assert.deepEqual(plain(lib.overriddenProviders(
-    '{"claude":{"hideCritters":true},"codex":{"panelDisplayMode":"logos"},"zeta":{"hideCritters":true},"alpha":{"hideCritters":true}}',
-    ["codex", "claude", "gemini"])), ["codex", "claude", "alpha", "zeta"])
-// entries holding only invalid values do not count
-assert.deepEqual(plain(lib.overriddenProviders('{"codex":{"panelDisplayMode":"bogus"}}', ["codex"])), [])
-assert.deepEqual(plain(lib.overriddenProviders('{"codex":{"hideCritters":true}}')), ["codex"])
-
-// single-key updates; null clears back to global
-let raw = lib.withSetting("{}", "codex", "hideCritters", true)
-assert.equal(raw, '{"codex":{"hideCritters":true}}')
-raw = lib.withSetting(raw, "codex", "hideCritters", null)
-assert.equal(raw, "{}")
-assert.equal(lib.withSetting("{}", "codex", "hideCritters", "yes"), "{}")
-assert.equal(lib.withSetting("{}", "codex", "nope", true), "{}")
-assert.equal(lib.withSetting("{}", "codex", "panelDisplayMode", "logos"),
-    '{"codex":{"panelDisplayMode":"logos"}}')
+// a parsed map works wherever the stored string does
+const parsed = lib.parse('{"codex":{"hideCritters":true}}')
+assert.deepEqual(plain(lib.settingsFor(parsed, "codex")), { hideCritters: true })
+assert.equal(lib.effectiveHideCritters(parsed, "codex", false), true)
+assert.equal(lib.hasOverride(parsed, "claude"), false)
 
 // multi-key updates; last empty entry removes the provider
 raw = lib.withSettings("{}", "claude", { panelDisplayMode: "logos", percentStyle: "used" })
@@ -128,7 +113,7 @@ assert.deepEqual(plain(lib.panelIconModel("{}", [], globals, false)), { icons: [
 assert.deepEqual(plain(lib.panelIconModel("{}", [], globals, true)), { icons: ["__merged__"], merged: [] })
 
 // setting registry: the single source for per-provider mirroring
-assert.deepEqual(plain(lib.perProviderKeys()),
+assert.deepEqual(plain(lib.SETTING_KEYS),
     ["panelDisplayMode", "showPercentInPanel",
      "panelPercentSource", "percentStyle", "hideCritters"])
 assert.equal(lib.defFor("nope"), null)
@@ -137,9 +122,8 @@ assert.deepEqual(plain(lib.keysForSection("percentage")),
 assert.deepEqual(plain(lib.keysForSection("nope")), [])
 
 // every registry entry is well formed and validation follows it
-for (const key of lib.perProviderKeys()) {
+for (const key of lib.SETTING_KEYS) {
     const def = plain(lib.defFor(key))
-    assert.equal(def.perProvider, true)
     assert.ok(lib.SECTIONS.indexOf(def.section) >= 0, `${key} section`)
     if (def.control === "enum") {
         assert.ok(Array.isArray(plain(def.values)) && def.values.length > 0)

@@ -6,9 +6,9 @@ import "code/catalog.js" as Catalog
 import "code/providerOverrides.js" as ProviderOverrides
 
 // Per-provider panel overrides for one provider. The dialog never writes
-// configuration itself: OK and "Reset to global" emit staged() with the new
-// providerOverrides string, and the settings page assigns it to its cfg_
-// property, so the page's Apply/OK stays the single commit.
+// configuration itself: OK emits staged() with the new providerOverrides
+// string and the settings page assigns it to its cfg_ property, so the page's
+// Apply/OK stays the single commit. Cancel drops every change made here.
 QQC2.Dialog {
     id: dialog
 
@@ -46,7 +46,7 @@ QQC2.Dialog {
     function loadRows() {
         var current = ProviderOverrides.settingsFor(dialog.overrides, dialog.providerId)
         var state = {}
-        var keys = ProviderOverrides.perProviderKeys()
+        var keys = ProviderOverrides.SETTING_KEYS
         for (var i = 0; i < keys.length; i++) {
             if (current[keys[i]] !== undefined)
                 state[keys[i]] = { custom: true, value: current[keys[i]] }
@@ -65,14 +65,18 @@ QQC2.Dialog {
         dialog.close()
     }
 
+    // Untick every row; OK then stages the provider without overrides.
     function resetToGlobal() {
-        dialog.staged(ProviderOverrides.resetProvider(dialog.overrides, dialog.providerId))
-        dialog.loadRows()
+        var state = {}
+        var keys = ProviderOverrides.SETTING_KEYS
+        for (var i = 0; i < keys.length; i++)
+            state[keys[i]] = { custom: false, value: dialog.globalValue(keys[i]) }
+        dialog.rows = state
     }
 
     function tickedValues() {
         var values = {}
-        var keys = ProviderOverrides.perProviderKeys()
+        var keys = ProviderOverrides.SETTING_KEYS
         for (var i = 0; i < keys.length; i++) {
             // Rows whose prerequisite is off can't be edited; don't store them.
             if (dialog.rowCustom(keys[i]) && dialog.requiresMet(keys[i]))
@@ -183,7 +187,7 @@ QQC2.Dialog {
     }
 
     function hasCustom() {
-        var keys = ProviderOverrides.perProviderKeys()
+        var keys = ProviderOverrides.SETTING_KEYS
         for (var i = 0; i < keys.length; i++) {
             if (dialog.rowCustom(keys[i]))
                 return true
