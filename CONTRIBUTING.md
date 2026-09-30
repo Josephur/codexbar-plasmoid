@@ -41,6 +41,8 @@ Logic that does not need QML lives in `contents/ui/code/*.js` and is tested with
 
 ### Syncing providers with upstream
 
+A daily workflow (`.github/workflows/upstream-check.yml`) compares the pinned list with the latest CodexBar CLI release and opens an issue labelled `upstream-sync` when providers were added or removed. `DRY_RUN=1 scripts/check-upstream-providers.sh` runs the same check locally.
+
 When the CodexBar CLI gains or drops providers:
 
 1. Regenerate `tests/data/cli-provider-ids.txt` with the command in its header.
