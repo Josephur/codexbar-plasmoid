@@ -17,8 +17,8 @@ jobs:
       - name: Install Plasma runtime
         run: >-
           pacman -Syu --noconfirm
-          git plasma-sdk libplasma plasma5support kirigami kcmutils ksvg
-          breeze breeze-icons noto-fonts xorg-server-xvfb imagemagick
+          git plasma-sdk plasma-desktop libplasma plasma5support kirigami kcmutils ksvg
+          breeze breeze-icons noto-fonts xorg-server-xvfb xorg-xwininfo imagemagick
 
       - name: Check out repository
         uses: actions/checkout@v4

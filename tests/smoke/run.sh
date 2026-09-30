@@ -26,27 +26,52 @@ xvfb_pid=$!
 trap 'kill "$xvfb_pid" 2>/dev/null || true' EXIT
 sleep 2
 
-# render NAME [plasmoidviewer options...]
-render() {
-    local name="$1"
+# package NAME KEY=VALUE... prints the path of a copy of the widget whose
+# config defaults are replaced, so every scenario starts from a known state.
+package() {
+    local dir="$work/pkg-$1"
     shift
-    plasmoidviewer -a "$repo" "$@" >"$out/$name.log" 2>&1 &
+    mkdir -p "$dir"
+    cp -r "$repo/metadata.json" "$repo/contents" "$dir/"
+    local xml="$dir/contents/config/main.xml" pair key value
+    for pair in "$@"; do
+        key="${pair%%=*}"
+        value="${pair#*=}"
+        awk -v key="$key" -v value="$value" '
+            index($0, "<entry name=\"" key "\"") { hit = 1 }
+            hit && /<default>/ { sub(/<default>.*<\/default>/, "<default>" value "</default>"); hit = 0 }
+            { print }
+        ' "$xml" >"$xml.new"
+        mv "$xml.new" "$xml"
+        grep -q -F "<default>$value</default>" "$xml" || { echo "unknown setting: $key" >&2; return 1; }
+    done
+    echo "$dir"
+}
+
+# render NAME PACKAGE WIDTHxHEIGHT [plasmoidviewer options...]
+render() {
+    local name="$1" pkg="$2" size="$3"
+    shift 3
+    plasmoidviewer -a "$pkg" -s "$size" "$@" >"$out/$name.log" 2>&1 &
     local pid=$!
     sleep "${SMOKE_WAIT:-15}"
-    import -window root "$out/$name.full.png"
-    magick "$out/$name.full.png" -trim +repage "$out/$name.png"
-    rm -f "$out/$name.full.png"
+    xwininfo -root -tree >"$out/$name.windows.txt" 2>&1 || true
+    import -window root "$out/$name.screen.png"
+    magick "$out/$name.screen.png" -crop "${size}+0+0" +repage "$out/$name.png"
     kill "$pid" 2>/dev/null || true
     wait "$pid" 2>/dev/null || true
 }
 
-render panel-horizontal -f horizontal -l bottomedge -s 420x48
-render popup -f planar -s 560x820
+three="enabledProviders=codex,claude,antigravity"
+render panel-meters "$(package meters "$three" showPercentInPanel=true panelPercentSource=lowest)" \
+    480x80 -f horizontal -l bottomedge
+render panel-logos "$(package logos "$three" panelDisplayMode=logos showPercentInPanel=true)" \
+    480x80 -f horizontal -l bottomedge
+render popup "$(package popup "$three")" 560x860 -f planar
 
-find "$XDG_CONFIG_HOME" -type f -name '*appletsrc' -print -exec cat {} \; >"$out/appletsrc.txt" || true
-
-# QML runtime errors from the widget's own files fail the test.
-errors="$(grep -h -E 'contents/ui/.*(Error|Unable to assign|is not a function|Cannot read property|is not defined)' "$out"/*.log || true)"
+# QML runtime errors from the widget's own files fail the test, and so does
+# an applet or containment that could not be loaded at all.
+errors="$(grep -h -E 'contents/ui/.*(Error|Unable to assign|is not a function|Cannot read property|is not defined)|does not exist|Containment doesn.t exist' "$out"/*.log || true)"
 if [[ -n "$errors" ]]; then
     echo "QML runtime errors:" >&2
     echo "$errors" >&2
