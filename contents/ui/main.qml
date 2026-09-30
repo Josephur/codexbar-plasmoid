@@ -638,20 +638,8 @@ PlasmoidItem {
         var d = usageData[p]
         if (!d || !d.entry || !d.entry.usage)
             return -1
-        var u = d.entry.usage
-        var pw = Catalog.windowFor(u, p, 300)
-        var sw = Catalog.windowFor(u, p, 10080)
-        var rp = Catalog.windowUsageKnown(pw) ? 100 - Catalog.normalizedPercent(pw.usedPercent) : -1
-        var rs = Catalog.windowUsageKnown(sw) ? 100 - Catalog.normalizedPercent(sw.usedPercent) : -1
-        if (source === "weekly")
-            return rs >= 0 ? rs : rp
-        if (source === "lowest") {
-            var c = []
-            if (rp >= 0) c.push(rp)
-            if (rs >= 0) c.push(rs)
-            return c.length > 0 ? Math.min.apply(null, c) : -1
-        }
-        return rp >= 0 ? rp : rs
+        var pick = Catalog.panelWindow(d.entry.usage, p, source)
+        return pick ? pick.remaining : -1
     }
 
     function isStale(p) {

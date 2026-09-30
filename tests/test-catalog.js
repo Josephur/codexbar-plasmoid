@@ -132,5 +132,26 @@ assert.equal(catalog.windowBarFill({ usedPercent: 37.4 }, true), 37)
 assert.equal(catalog.windowBarFill({ usedPercent: 120 }, false), 0)
 assert.equal(catalog.windowBarFill({ usageKnown: false, usedPercent: 5 }, false), 0)
 assert.equal(catalog.windowBarFill(null, true), 0)
+// Panel percentage sources (#23): "lowest" weighs usable extra windows too
+const scoped = {
+    primary: { usedPercent: 12, windowMinutes: 300 },
+    secondary: { usedPercent: 40, windowMinutes: 10080 },
+    extraRateWindows: [
+        { id: "claude-weekly-scoped-fable", title: "Fable only",
+          window: { usedPercent: 88, windowMinutes: 10080 } },
+        { id: "unknown", title: "Unknown", window: { usedPercent: 99 }, usageKnown: false },
+        { id: "placeholder", title: "Placeholder", window: { usedPercent: 100, isSyntheticPlaceholder: true } },
+    ],
+}
+assert.equal(catalog.panelWindow(scoped, "claude", "session").remaining, 88)
+assert.equal(catalog.panelWindow(scoped, "claude", "weekly").remaining, 60)
+assert.equal(catalog.panelWindow(scoped, "claude", "lowest").remaining, 12)
+assert.equal(catalog.panelWindow(scoped, "claude", "lowest").window.usedPercent, 88)
+// session and weekly fall back to each other; nothing known gives null
+const weeklyOnly = { secondary: { usedPercent: 30, windowMinutes: 10080 } }
+assert.equal(catalog.panelWindow(weeklyOnly, "codex", "session").remaining, 70)
+assert.equal(catalog.panelWindow({ primary: { usedPercent: 10, windowMinutes: 300 } }, "codex", "weekly").remaining, 90)
+assert.equal(catalog.panelWindow({}, "codex", "lowest"), null)
+assert.equal(catalog.panelWindow(null, "codex", "session"), null)
 
 console.log("Catalog tests passed")
