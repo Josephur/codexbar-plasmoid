@@ -7,24 +7,37 @@ import org.kde.kirigami as Kirigami
 import "code/catalog.js" as Catalog
 import "code/claudeAccounts.js" as ClaudeAccounts
 import "code/cliStatus.js" as CliStatus
+import "code/configProviders.js" as ConfigProviders
 import "code/providerSources.js" as ProviderSources
 
 PlasmoidItem {
     id: root
 
     // ---- configuration ----
+    // CodexBar's config.json decides which providers are enabled once the CLI
+    // can read and safely write it (#25): [{ id, name, enabled, source }], or
+    // null while the widget's own enabledProviders list applies.
+    property var configProviderList: null
+    readonly property bool configMode: configProviderList !== null
     readonly property var enabledProviders: {
-        var raw = (Plasmoid.configuration.enabledProviders || "").split(",")
-        var list = []
-        for (var i = 0; i < raw.length; i++) {
-            var s = raw[i].trim()
-            if (s.length > 0 && Catalog.PROVIDERS[s] !== undefined && list.indexOf(s) < 0)
-                list.push(s)
-        }
+        var list = configProviderList !== null
+            ? ConfigProviders.enabledIds(configProviderList)
+            : keyProviderIds().filter(function (id) { return Catalog.PROVIDERS[id] !== undefined })
+        // Catalog order first; providers the catalog does not know, such as
+        // user plugins, follow in CodexBar's order.
         var order = Catalog.orderedIds()
-        list.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b) })
-        return list
+        function rank(id) {
+            var i = order.indexOf(id)
+            return i >= 0 ? i : order.length + list.indexOf(id)
+        }
+        return list.slice().sort(function (a, b) { return rank(a) - rank(b) })
     }
+    property var pendingConfig: ({})
+    property var pendingConfigWrite: ({})
+    // Set while config.json's state is copied into the settings keys.
+    property bool mirroringConfig: false
+    // A failed one-time migration keeps this session on the widget's own list.
+    property bool configMigrationFailed: false
 
     // ---- data model ----
     // providerId -> { entry, entries, cost, costUpdatedAt, error, loading, fetchedAt }
@@ -149,13 +162,18 @@ PlasmoidItem {
     }
 
     function cliCmd(args, timeoutSeconds) {
+        // Plasma's environment may omit user or system bin directories.
+        return commandPathPrefix + environmentFilePrefix()
+            + cliInvocation(args, timeoutSeconds)
+    }
+
+    // One bounded codexbar call, without the PATH and environment prefix.
+    function cliInvocation(args, timeoutSeconds) {
         var quoted = cliExecutable === "codexbar"
             ? "codexbar" : shellQuoteExecutable(cliExecutable)
         var seconds = typeof timeoutSeconds === "number" ? timeoutSeconds : 120
         var killDelay = seconds <= 10 ? 5 : 10
-        // Plasma's environment may omit user or system bin directories.
-        return commandPathPrefix + environmentFilePrefix()
-            + "timeout -k " + killDelay + " " + seconds + " "
+        return "timeout -k " + killDelay + " " + seconds + " "
             + quoted + " " + args + " 2>/dev/null"
     }
 
@@ -368,7 +386,68 @@ PlasmoidItem {
         return (Date.now() - ts) > maxAge
     }
 
+    function keyProviderIds() {
+        var raw = (Plasmoid.configuration.enabledProviders || "").split(",")
+        var list = []
+        for (var i = 0; i < raw.length; i++) {
+            var s = raw[i].trim()
+            if (s.length > 0 && list.indexOf(s) < 0)
+                list.push(s)
+        }
+        return list
+    }
+
     function refreshAll(force) {
+        // Read config.json first so changes made with the CLI or the app
+        // show up; the probes follow once it is read.
+        if (CliStatus.canRunUsage(cliState.code)
+                && CliStatus.supportsConfigSource(cliState.detectedVersion)
+                && !configMigrationFailed) {
+            loadConfig(force)
+            return
+        }
+        probeAll(force)
+    }
+
+    function loadConfig(force) {
+        var command = uniqueCliCommand(commandPathPrefix + environmentFilePrefix()
+            + cliInvocation("config providers --json", 30) + "; printf '\\036'; "
+            + cliInvocation("config dump --json", 30), "config", cliState.generation)
+        pendingConfig[command] = { force: force === true, cliGeneration: cliState.generation }
+        executable.connectSource(command)
+    }
+
+    // Makes config.json enable exactly the wanted providers, one write after
+    // the other so they cannot race on the file; the config is read (and
+    // probed) again afterwards. Returns false when nothing has to change.
+    function writeConfig(wanted, force, migration) {
+        var steps = ConfigProviders.changes(configProviderList, wanted)
+        if (steps.length === 0)
+            return false
+        var command = uniqueCliCommand(commandPathPrefix + environmentFilePrefix()
+            + steps.map(function (step) { return cliInvocation("config " + step, 30) }).join(" && "),
+            "config-write", cliState.generation)
+        pendingConfigWrite[command] = {
+            force: force === true, migration: migration === true, cliGeneration: cliState.generation
+        }
+        executable.connectSource(command)
+        return true
+    }
+
+    // The settings page shows config.json's state: enabledProviders mirrors
+    // it, and configProviders caches the full list with names and sources.
+    function mirrorConfig(list) {
+        var enabled = ConfigProviders.enabledIds(list).join(",")
+        var cache = JSON.stringify(list)
+        mirroringConfig = true
+        if (Plasmoid.configuration.enabledProviders !== enabled)
+            Plasmoid.configuration.enabledProviders = enabled
+        if (Plasmoid.configuration.configProviders !== cache)
+            Plasmoid.configuration.configProviders = cache
+        mirroringConfig = false
+    }
+
+    function probeAll(force) {
         if (CliStatus.canRunUsage(cliState.code)) {
             for (var i = 0; i < enabledProviders.length; i++) {
                 var provider = enabledProviders[i]
@@ -509,6 +588,55 @@ PlasmoidItem {
         if (pendingCliInstall[source] !== undefined) {
             delete pendingCliInstall[source]
             finishCliInstall(exitCode, stdout)
+            return
+        }
+
+        var configReq = pendingConfig[source]
+        if (configReq !== undefined) {
+            delete pendingConfig[source]
+            if (configReq.cliGeneration !== cliState.generation)
+                return
+            var parts = (stdout || "").split("\u001e")
+            var list = ConfigProviders.parse(parts[0], parts.length > 1 ? parts[1] : "",
+                                             Catalog.cliProviderId)
+            if (list === null) {
+                // config.json could not be read: keep the widget's own list.
+                configProviderList = null
+                probeAll(configReq.force)
+                return
+            }
+            for (var n = 0; n < list.length; n++)
+                Catalog.registerName(list[n].id, list[n].name)
+            configProviderList = list
+            if (!Plasmoid.configuration.configMigrated) {
+                // Once, the widget's own list becomes config.json's.
+                if (writeConfig(keyProviderIds(), configReq.force, true))
+                    return
+                Plasmoid.configuration.configMigrated = true
+            }
+            mirrorConfig(list)
+            probeAll(configReq.force)
+            return
+        }
+
+        var writeReq = pendingConfigWrite[source]
+        if (writeReq !== undefined) {
+            delete pendingConfigWrite[source]
+            if (writeReq.cliGeneration !== cliState.generation)
+                return
+            if (exitCode !== 0 && writeReq.migration) {
+                // Keep the widget's own list rather than losing it.
+                console.warn("codexbar: moving the provider list to config.json failed, exit", exitCode)
+                configMigrationFailed = true
+                configProviderList = null
+                probeAll(writeReq.force)
+                return
+            }
+            if (exitCode !== 0)
+                console.warn("codexbar: config write failed, exit", exitCode)
+            else if (writeReq.migration)
+                Plasmoid.configuration.configMigrated = true
+            loadConfig(writeReq.force)
             return
         }
 
@@ -747,6 +875,12 @@ PlasmoidItem {
             if (root.componentReady)
                 root.refreshAll(true)
         }
+        function onEnabledProvidersChanged() {
+            // A new selection from the settings page goes to config.json;
+            // copying config.json's state back into the key does not.
+            if (root.componentReady && root.configMode && !root.mirroringConfig)
+                root.writeConfig(root.keyProviderIds(), true, false)
+        }
         function onProviderOverridesChanged() {
             // Overrides only change how the panel draws; no re-probe needed.
             if (root.componentReady)
@@ -766,7 +900,9 @@ PlasmoidItem {
         if (!valid)
             currentTab = defaultTab()
         deferAutomaticCostScans()
-        refreshAll(true)
+        // In config mode every read of config.json is followed by probes.
+        if (!configMode)
+            refreshAll(true)
     }
 
     onCostEnabledChanged: {

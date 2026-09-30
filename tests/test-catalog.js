@@ -27,8 +27,17 @@ assert.equal(catalog.reportedProviderId("groqcloud"), "groq")
 assert.equal(catalog.reportedProviderId("codex"), "codex")
 assert.deepEqual(providersOf(catalog.entriesForProvider(
     [{ provider: "abacus", usage: {} }], "abacusai")), ["abacus"])
-for (const id of Object.keys(catalog.REPORTED_PROVIDER_IDS))
+for (const id of Object.keys(catalog.REPORTED_PROVIDER_IDS)) {
     assert.ok(catalog.PROVIDERS[id] !== undefined, id)
+    assert.equal(catalog.cliProviderId(catalog.reportedProviderId(id)), id)
+}
+assert.equal(catalog.cliProviderId("myplugin"), "myplugin")
+// providers the catalog does not know take the name config.json gives them
+assert.equal(catalog.meta("myplugin").name, "myplugin")
+catalog.registerName("myplugin", "My Plugin")
+catalog.registerName("codex", "Not Codex")
+assert.equal(catalog.meta("myplugin").name, "My Plugin")
+assert.equal(catalog.meta("codex").name, "Codex")
 // entries without a provider field (older CLI output) are kept; junk is not
 assert.equal(catalog.entriesForProvider([{ usage: {} }], "codex").length, 1)
 assert.equal(catalog.entriesForProvider([null, 3, "x"], "codex").length, 0)

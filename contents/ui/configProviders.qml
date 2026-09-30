@@ -11,6 +11,7 @@ KCM.SimpleKCM {
     id: page
 
     property string cfg_enabledProviders
+    property string cfg_configProviders
     property string cfg_providerSources
     property string cfg_providerOverrides
     // Globals the override dialog's unticked rows follow; never assigned here.
@@ -29,6 +30,48 @@ KCM.SimpleKCM {
     readonly property var sourceLabels: [
         i18n("Auto"), i18n("Web"), i18n("CLI"), i18n("OAuth"), i18n("API")
     ]
+
+    // CodexBar's config.json as the widget last read it (#25), or null while
+    // the widget keeps its own list (CodexBar CLI older than 0.66).
+    readonly property var configList: {
+        var list = null
+        try {
+            list = JSON.parse(cfg_configProviders || "null")
+        } catch (e) {
+            list = null
+        }
+        return Array.isArray(list) && list.length > 0 ? list : null
+    }
+
+    function configEntry(id) {
+        var list = configList || []
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].id === id)
+                return list[i]
+        }
+        return null
+    }
+
+    function providerIds() {
+        return configList ? configList.map(function (p) { return p.id }) : Catalog.orderedIds()
+    }
+
+    function providerName(id) {
+        var entry = configEntry(id)
+        return Catalog.PROVIDERS[id] === undefined && entry ? entry.name : Catalog.meta(id).name
+    }
+
+    // Source choices for one provider. With config.json the first choice is
+    // the source stored there; the others override it for the widget's probes.
+    function sourceModel(id) {
+        var labels = page.sourceLabels.slice()
+        var entry = configEntry(id)
+        if (entry) {
+            var index = ProviderSources.SOURCES.indexOf(entry.source)
+            labels[0] = i18n("Config: %1", index >= 0 ? page.sourceLabels[index] : entry.source)
+        }
+        return labels
+    }
 
     function enabledList() {
         return (cfg_enabledProviders || "").split(",")
@@ -51,7 +94,9 @@ KCM.SimpleKCM {
 
         QQC2.Label {
             Layout.fillWidth: true
-            text: i18n("Providers are probed with the codexbar CLI. Only enable providers you actually use — each one costs a probe per refresh. The source column picks the CodexBar data source (--source) for a provider; Auto lets the CLI decide. The gear button opens per-provider overrides for the panel settings; anything left unticked there follows the General page.")
+            text: page.configList
+                ? i18n("Providers and whether they are enabled come from CodexBar's config.json, which the CodexBar CLI and app share; Apply writes your changes there with codexbar config enable/disable. Each enabled provider costs a probe per refresh. The source column shows the source stored in config.json; any other choice overrides it for this widget only (--source). The gear button opens per-provider overrides for the panel settings; anything left unticked there follows the General page.")
+                : i18n("Providers are probed with the codexbar CLI. Only enable providers you actually use — each one costs a probe per refresh. The source column picks the CodexBar data source (--source) for a provider; Auto lets the CLI decide. The gear button opens per-provider overrides for the panel settings; anything left unticked there follows the General page.")
             wrapMode: Text.WordWrap
             opacity: 0.7
         }
@@ -73,13 +118,13 @@ KCM.SimpleKCM {
         }
 
         Repeater {
-            model: Catalog.orderedIds().filter(function (id) {
+            model: page.providerIds().filter(function (id) {
                 if (page.showEnabledOnly && page.enabledList().indexOf(id) < 0)
                     return false
                 var q = search.text.toLowerCase()
                 if (q.length === 0)
                     return true
-                return id.indexOf(q) >= 0 || Catalog.meta(id).name.toLowerCase().indexOf(q) >= 0
+                return id.indexOf(q) >= 0 || page.providerName(id).toLowerCase().indexOf(q) >= 0
             })
 
             RowLayout {
@@ -108,7 +153,7 @@ KCM.SimpleKCM {
                 }
 
                 QQC2.Label {
-                    text: Catalog.meta(row.modelData).name
+                    text: page.providerName(row.modelData)
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
@@ -122,8 +167,8 @@ KCM.SimpleKCM {
                 QQC2.ComboBox {
                     id: sourceCombo
                     enabled: page.enabledList().indexOf(row.modelData) >= 0
-                    model: page.sourceLabels
-                    Accessible.name: i18n("Data source for %1", Catalog.meta(row.modelData).name)
+                    model: page.sourceModel(row.modelData)
+                    Accessible.name: i18n("Data source for %1", page.providerName(row.modelData))
                     currentIndex: {
                         page.cfg_providerSources
                         return Math.max(0, ProviderSources.SOURCES.indexOf(
@@ -138,10 +183,10 @@ KCM.SimpleKCM {
                     enabled: page.enabledList().indexOf(row.modelData) >= 0
                     icon.name: "settings-configure"
                     highlighted: ProviderOverrides.hasOverride(page.cfg_providerOverrides, row.modelData)
-                    Accessible.name: i18n("Provider settings for %1", Catalog.meta(row.modelData).name)
-                    QQC2.ToolTip.text: i18n("Per-provider panel settings for %1", Catalog.meta(row.modelData).name)
+                    Accessible.name: i18n("Provider settings for %1", page.providerName(row.modelData))
+                    QQC2.ToolTip.text: i18n("Per-provider panel settings for %1", page.providerName(row.modelData))
                     QQC2.ToolTip.visible: hovered
-                    onClicked: settingsDialog.openFor(row.modelData)
+                    onClicked: settingsDialog.openFor(row.modelData, page.providerName(row.modelData))
                 }
 
             }
