@@ -233,14 +233,27 @@ KCM.SimpleKCM {
                     onClicked: settingsDialog.openFor(row.modelData, page.providerName(row.modelData))
                 }
 
-                QQC2.ToolButton {
-                    // Works for disabled providers too, whose gear is greyed out.
-                    enabled: page.overriddenIds.indexOf(row.modelData) >= 0
-                    icon.name: "globe"
-                    Accessible.name: i18n("Reset %1 to global defaults", page.providerName(row.modelData))
-                    QQC2.ToolTip.text: i18n("Reset %1 to global defaults", page.providerName(row.modelData))
-                    QQC2.ToolTip.visible: hovered
-                    onClicked: page.confirmReset(row.modelData)
+                // A disabled button gets no hover events, so the wrapper's
+                // HoverHandler drives the tooltip in both states.
+                Item {
+                    implicitWidth: globeButton.implicitWidth
+                    implicitHeight: globeButton.implicitHeight
+
+                    HoverHandler { id: globeHover }
+
+                    QQC2.ToolButton {
+                        id: globeButton
+                        anchors.fill: parent
+                        // Works for disabled providers too, whose gear is greyed out.
+                        enabled: page.overriddenIds.indexOf(row.modelData) >= 0
+                        icon.name: "globe"
+                        Accessible.name: i18n("Reset %1 to global defaults", page.providerName(row.modelData))
+                        QQC2.ToolTip.text: enabled
+                            ? i18n("Reset %1 to global defaults", page.providerName(row.modelData))
+                            : i18n("%1 has no custom panel settings to reset", page.providerName(row.modelData))
+                        QQC2.ToolTip.visible: globeHover.hovered
+                        onClicked: page.confirmReset(row.modelData)
+                    }
                 }
             }
         }
